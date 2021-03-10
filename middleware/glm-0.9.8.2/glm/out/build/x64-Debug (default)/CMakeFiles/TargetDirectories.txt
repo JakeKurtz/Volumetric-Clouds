@@ -1,0 +1,3 @@
+C:/Users/Jake/Desktop/UOFC/CPSC-591-RENDERING/ASSIGNMENTS/A2Boilerplate/middleware/glm-0.9.8.2/glm/out/build/x64-Debug (default)/CMakeFiles/glm_dummy.dir
+C:/Users/Jake/Desktop/UOFC/CPSC-591-RENDERING/ASSIGNMENTS/A2Boilerplate/middleware/glm-0.9.8.2/glm/out/build/x64-Debug (default)/CMakeFiles/edit_cache.dir
+C:/Users/Jake/Desktop/UOFC/CPSC-591-RENDERING/ASSIGNMENTS/A2Boilerplate/middleware/glm-0.9.8.2/glm/out/build/x64-Debug (default)/CMakeFiles/rebuild_cache.dir

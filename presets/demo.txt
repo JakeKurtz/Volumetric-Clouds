@@ -1,0 +1,20 @@
+v3 lightColor 255 255 255
+v3 ambientColor 200 200 200
+v3 skyTopColor 56 91 255
+v3 skyBottomColor 154 201 255
+f density 20.0
+f topDensity 0.9
+f bottomDensity 0.55
+f lightIntensity 7.8
+f noiseIntensity 0.47
+f coverageScale 0.023
+f noiseScale 0.0
+f detailScale 0.522
+f hg_g 0.30
+f light_xpos 0.0
+f light_ypos 100.0
+f light_zpos 0.0
+f thickness 2.8
+f cloudTopRoundness 0.36
+f cloudBottomRoundness 0.23
+f ambientBlend 0.36
