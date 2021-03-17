@@ -40,11 +40,11 @@ void processInput(GLFWwindow* window);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 // window settings
-int SCR_WIDTH = 800;
-int SCR_HEIGHT = 600;
+int SCR_WIDTH = 1920;
+int SCR_HEIGHT = 1080;
 
 // camera settings
-Camera camera(glm::vec3(0.f, 6000.1f, 10.f));
+Camera camera(glm::vec3(0.f, 6005.f, 50.f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -191,20 +191,29 @@ int main()
     */
     vector<PBRobj*> objects;
 
-    Light light(directional, glm::vec3(0,1,0), glm::vec3(1.f), 1.f, false);
-    PBRobj sphere1("../models/sphere.obj", glm::vec3(0.f,6003.f,5.f), 1.f);
-    PBRobj sphere2("../models/sphere.obj", glm::vec3(2.f,6003.f,5.f), 1.f);
-    PBRobj sphere3("../models/sphere.obj", glm::vec3(-2.f,6003.f,5.f), 1.f);
-    PBRobj mountain("../models/Mountain2.obj", glm::vec3(0.f,6000.f,0.f), 1.0f);
+    Light light(directional, glm::vec3(0,1,0), glm::vec3(1.f), 31.f, true);
 
-    Render* render = new Render();
+    light.direction = glm::normalize(glm::vec3(1.f, 1.f, 1.f));
+
+    PBRobj sphere1("../models/sphere.obj", glm::vec3(0.f,6003.f,0.f), 1.f);
+    PBRobj sphere2("../models/sphere.obj", glm::vec3(3.f,6003.f,0.f), 1.f);
+    PBRobj sphere3("../models/sphere.obj", glm::vec3(-3.f,6003.f,0.f), 1.f);
+    PBRobj celestialSphere("../models/celestial/celestial.obj", glm::vec3(0.f), 12000.f);
+    PBRobj plane("../models/plane.obj", glm::vec3(0.f,6000.f,0.f), 100.f);
+    PBRobj mountain("../models/mountain/Mountain.obj", glm::vec3(0.f,6001.f,0.f), 0.15f);
+
+    Shader starShader("../shaders/star_vs.glsl", "../shaders/star_fs.glsl");
+    celestialSphere.setShader(starShader);
+
+    Render* render = new Render(&camera, 1920, 1080);
     Clouds* clouds = new Clouds(render);
 
     render->setAtmosphere(clouds);
 
-    objects.push_back(&sphere1);
-    objects.push_back(&sphere2);
-    objects.push_back(&sphere3);
+    //objects.push_back(&sphere1);
+    //objects.push_back(&sphere2);
+    //objects.push_back(&sphere3);
+    objects.push_back(&celestialSphere);
     objects.push_back(&mountain);
 
     // Infinite render loop
@@ -224,7 +233,16 @@ int main()
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_3D);
 
+        glEnable(GL_FRAMEBUFFER_SRGB);
+
+        celestialSphere.translate(camera.Position);
+
+        clouds->time = i;
+
         render->Draw(objects, light, camera);
+
+        glDisable(GL_FRAMEBUFFER_SRGB);
+
         clouds->Draw(light, camera);
 
         #pragma region skyShader
@@ -355,8 +373,11 @@ int main()
             ImGui::Text("Planet Radius");
             ImGui::SliderFloat("##planetRadius", &clouds->planetRadius, 1.f, 500.f, "%.5f");
 
-            //ImGui::Text("Aerial Perspective ");
-            //ImGui::DragFloat("##max_steps", &clouds->max_steps, 1.0, 1.0, 1000.0, "%0.2f");
+            ImGui::Text("Cloud Aerial Perspective");
+            ImGui::DragFloat("##cloud_ap", &clouds->ap_cloud_intensity, 1.0, 1.0, 1000.0, "%0.2f");
+            
+            ImGui::Text("World Aerial Perspective");
+            ImGui::DragFloat("##world_ap", &clouds->ap_world_intensity, 1.0, 1.0, 1000.0, "%0.2f");
 
             if (ImGui::TreeNode("Scattering/Absorption Settings"))
             {
@@ -384,6 +405,9 @@ int main()
             ImGui::Text("Sun Color");
             ImGui::ColorEdit3("##color", (float*)&light.color);
 
+            ImGui::Text("Ambient Color");
+            ImGui::ColorEdit3("##acolor", (float*)&clouds->ambientColor);
+
             ImGui::Text("Sun Intensity");
             ImGui::SliderFloat("##intensity", &light.intensity, 1.f, 100.0f, "%.4f");
 
@@ -404,6 +428,12 @@ int main()
 
         if (ImGui::TreeNode("Cloud Settings"))
         {
+
+            ImGui::Text("Attinuation Intensity");
+            ImGui::DragFloat("##attinuationScalar", &clouds->attinuationScalar, 0.001f, 0.f, 1.f, "%.5f");            
+            
+            ImGui::Text("Attinuation Clamp");
+            ImGui::DragFloat("##attinuationClamp", &clouds->attinuationClamp, 0.001f, 0.f, 1.f, "%.5f");
             
             if (ImGui::TreeNode("Density"))
             {
@@ -478,7 +508,7 @@ int main()
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
-        //i += 0.001 * animation_speed;
+        i += 0.001;
     }
 
     #pragma region Clean up

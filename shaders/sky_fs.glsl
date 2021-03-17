@@ -34,6 +34,9 @@ uniform vec3 planetCenter;
 //float atmosphereRadius = planetRadius * 1.025;
 uniform float atmosphereRadius;
 
+uniform float ap_world_intensity;
+uniform float ap_cloud_intensity;
+
 // Light Properties //
 uniform vec3 lightColor;
 uniform vec3 ambientColor;
@@ -43,6 +46,9 @@ uniform float g;
 uniform float silver_intensity;
 uniform float silver_spread;
 uniform vec3 lightDir;
+
+uniform float attinuationScalar;
+uniform float attinuationClamp;
 
 // Cloud Properties //
 uniform float density;
@@ -93,9 +99,7 @@ vec3 beta_ozone = vec3(2.04e-5, 4.97e-5, 1.95e-6)*absorption_intensity;
 float bn;
 float worldDepth;
 float bar;
-vec3 atmoColor = vec3(0.f);
-
-float attinuationScalar = 1.f;
+vec3 atmoColor = vec3(0.099,0.2,0.32);
 
 float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -184,7 +188,7 @@ vec3 getTransmittance(vec3 currentPos, vec3 lightDir, float viewOpticalDepth_ray
                       beta_mie*(lightOpticalDepth_mie + viewOpticalDepth_mie) + 
                       beta_ozone*(lightOpticalDepth_ray + viewOpticalDepth_ray)) );
 }
-vec3 atmoRayMarch(vec3 rayOrigin, vec3 rayDir, float rayLength) {
+vec3 atmoRayMarch(vec3 rayOrigin, vec3 rayDir, float rayLength, out vec3 opacity) {
 
 	float stepSize = rayLength / float(MAX_VIEW_SAMPLES);
 	float marchPos = 0.0;
@@ -216,7 +220,7 @@ vec3 atmoRayMarch(vec3 rayOrigin, vec3 rayDir, float rayLength) {
 		marchPos += stepSize;
 	}
 
-    vec3 opacity = exp(-(beta_mie * viewOpticalDepth_mie + beta_ray * viewOpticalDepth_ray + beta_ozone * viewOpticalDepth_ray));
+    opacity = exp(-(beta_mie * viewOpticalDepth_mie + beta_ray * viewOpticalDepth_ray + beta_ozone * viewOpticalDepth_ray));
 
 	return ((inScatter_ray * beta_ray * phase_ray) + (inScatter_mie * beta_mie * phase_mie)) * (lightIntensity * lightColor * 2.f) + vec3(0.f) * opacity;
 }
@@ -248,7 +252,7 @@ float cloudDensity(vec3 p, out float DA) {
     float DR_t = saturate(remap(p_h, topDensity, 1.f, 1.f, 0.f));
 
     float SA = SR_b * SR_t;
-    DA = 1.f;//DR_b * DR_t * 2;
+    DA = DR_b * DR_t * 2;
 
     float cn = remap(texture(coverageTex, (p.xz+time*20)*coverageScale).x*coverageIntensity*SA, 0, 1, -1, 1);
 
@@ -377,12 +381,12 @@ vec3 cloudRayLight(vec3 rayDir, vec3 rayPos, float stepSize) {
 
     }
 
-    beer = max(exp(-totalDensity*attinuationScalar), exp(-totalDensity*0.2));
-    powder = 1.0 - exp(-totalDensity*8);
+    //beer = exp(-totalDensity*attinuationScalar);
+    beer = max(exp(-totalDensity*attinuationScalar), exp(-attinuationClamp*attinuationScalar));
+    beer = max(totalDensity*0.5, beer);
+    powder = 1.0 - max(exp(-totalDensity*attinuationScalar*8), exp(-attinuationClamp*attinuationScalar*8));
 
-    vec3 ambientLight = vec3(0.0f);//ambientLightColor();
-
-    light = ambientLight + (beer * lightColor * lightIntensity * phase_mie);
+    light = ambientColor + (beer * lightColor * lightIntensity * phase_mie);
 
     return light;
 }
@@ -406,11 +410,10 @@ vec3 cloudRayMarch(vec3 rayDir, vec3 rayPos, out float depth, out float opacity)
 
     float rayLength = min(dstInsideCloudShell, worldDepth-dstToCloudShell);
 
-    //float stepSizeOrig = rayLength/float(MAX_CLOUD_STEPS) + dstToCloudShell * (0.001);
-    float stepSizeOrig = rayLength/float(MAX_CLOUD_STEPS);
+    float stepSizeOrig = rayLength/float(MAX_CLOUD_STEPS) + dstToCloudShell * (0.0001);
     float stepSize = stepSizeOrig;
 
-    vec3 rayStart = (rayPos + rayDir*dstToCloudShell) + (bn*stepSize);
+    vec3 rayStart = (rayPos + rayDir*dstToCloudShell);// + ((bn-0.5)*2*stepSize);
     vec3 currentPos = rayStart;
 
     float s0, s1;
@@ -429,7 +432,7 @@ vec3 cloudRayMarch(vec3 rayDir, vec3 rayPos, out float depth, out float opacity)
             float densitySample = cloudDensity(currentPos, DA);
 
             if (densitySample < 0) {
-                float ds = -densitySample * density * stepSize;
+                float ds = -densitySample * density * stepSize * DA;
 
                 beer_i = exp(-ds*attinuationScalar);
                 beer *= beer_i;
@@ -441,10 +444,9 @@ vec3 cloudRayMarch(vec3 rayDir, vec3 rayPos, out float depth, out float opacity)
                 vec3 light = cloudRayLight(rayDir, currentPos, 0.5);
 
                 color += (ds * light * beer);
-
-                //stepSize = stepSizeOrig * 1.f/pow(max(0.4, ds),0.8); // increase step size based on density
             }
             if (exit) break;
+            stepSize = stepSizeOrig * 1.f/pow(max(0.4, -densitySample*stepSize*DA*density),0.8); // increase step size based on density
             totalDist += stepSize;
         }
     }
@@ -461,9 +463,9 @@ void main() {
     vec3 rayDir = mat3(camRight,camUp,camDir) * normalize(vec3(uv, 1.0));
     vec3 rayPos = camPos;
 
-    bn = texture(blueNoise, uv*50.f).r;
-    worldDepth = 1e32;//texture(cameraDepthTexture, gl_FragCoord.xy/iResolution.xy).r;
-    //worldDepth = linearize_depth(worldDepth, 0.1f, 1000000.f);
+    bn = texture(blueNoise, uv*50).r;
+    worldDepth = texture(cameraDepthTexture, gl_FragCoord.xy/iResolution.xy).r;
+    worldDepth = linearize_depth(worldDepth, 0.1f, 1000000.f);
 
     float dstInsideAtmo, dstToAtmo;
     atmoIntersection(rayPos, rayDir, dstInsideAtmo, dstToAtmo);
@@ -482,27 +484,33 @@ void main() {
     float atmoRayLength = min(min(cloudDepth, worldDepth), dstInsideAtmo);
     //vec3 atmoColor = vec3(0.f);
 
+    vec3 atmoOpacity = vec3(1.f);
 	if (atmoRayLength > 0) {
 		vec3 pointInAtmo = rayPos + rayDir * dstToAtmo;
-		atmoColor = 1.0 - exp(-atmoRayMarch(pointInAtmo, rayDir, atmoRayLength));
+		atmoColor = 1.0 - exp(-atmoRayMarch(pointInAtmo, rayDir, atmoRayLength, atmoOpacity));
         //atmoColor *= lightIntensity;
     }
 
+    //atmoColor = max(atmoColor, vec3(0.f,0.05f,0.1));
+
     // Compute final image
     float test = atmoRayLength/dstInsideAtmo;
-    vec3 star = texture(starTex, gl_FragCoord.xy/iResolution.xy).rgb;
+    vec3 star = texture(screenTexture, gl_FragCoord.xy/iResolution.xy).rgb;
     float x = saturate(luminance(atmoColor).r*2.5);
     float y = saturate(luminance(star).r-x)*test;
-    //atmoColor = star*y + atmoColor*x;
+    atmoColor = star*y + atmoColor*x;
 
     vec3 mainColor = texture(screenTexture, gl_FragCoord.xy/iResolution.xy).rgb;
 
-    // Blend clouds and regular geometry
-    vec3 finalColor = mainColor*(1.f-cloudOpacity) + cloudColor;
-
     // Blend in the atmosphere
-    float tester = min(worldDepth, cloudDepth);
-    finalColor = atmoColor*(1.f-exp(-tester/300.f))+finalColor*(exp(-tester/300.f));
 
-    FragColor = vec4(cloudColor, 1.f);
+    float ap_world = exp(-worldDepth/ap_world_intensity);
+    float ap_clouds = exp(-cloudDepth/ap_cloud_intensity);
+
+    //float test = mix(1.f, 0.f, pow(cloudDepth, ));
+
+    vec3 finalColor = (atmoColor*(1.f-ap_world)+mainColor*ap_world) * (1.f - cloudOpacity);
+    finalColor += (atmoColor*(1.f-ap_clouds)+cloudColor*ap_clouds) * cloudOpacity;
+
+    FragColor = vec4(finalColor, 1.f);
 }

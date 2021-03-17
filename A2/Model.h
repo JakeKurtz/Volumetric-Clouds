@@ -3,16 +3,15 @@
 
 #include <glad/glad.h> 
 
-#include "Mesh.h"
-#include "Shader.h"
-//#include "Texture.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stb_image.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
+#include "Mesh.h"
+#include "Shader.h"
+#include "Texture.h"
 
 #define AI_CONFIG_PP_RVC_FLAGS aiComponent_NORMALS
 
@@ -22,6 +21,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+
 using namespace std;
 
 class Model
@@ -192,10 +192,10 @@ private:
             }
             if (!skip)
             {   // if texture hasn't been loaded already, load it
-                Texture texture;
+                Texture texture(str.C_Str(), this->directory, typeName, D2D);
                 //texture.id = TextureFromFile(str.C_Str(), this->directory);
-                texture.type = typeName;
-                texture.path = str.C_Str();
+                //texture.type = typeName;
+                //texture.path = str.C_Str();
                 textures.push_back(texture);
                 textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
             }

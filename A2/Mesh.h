@@ -7,6 +7,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Shader.h"
+#include "Texture.h"
+#include "Texture.h"
 
 #include <string>
 #include <vector>
@@ -25,11 +27,11 @@ struct Vertex {
     glm::vec3 Bitangent;
 };
 
-struct Texture {
-    unsigned int id;
-    string type;
-    string path;
-};
+//struct Texture {
+//    unsigned int id;
+//    string type;
+//    string path;
+//};
 
 class Mesh {
 public:

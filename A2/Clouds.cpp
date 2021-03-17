@@ -1,15 +1,10 @@
-#ifndef CLOUD_H
-#define CLOUD_H
-
 #include "Clouds.h"
-#include "Render.h"
-#include "Texture.h"
 
 Clouds::Clouds(Render* _renderContext) : model("../models/sphere.obj"), shader("../shaders/sky_vs.glsl", "../shaders/sky_fs.glsl"), depthShader("../shaders/cloud_vs.glsl", "../shaders/cloud_fs.glsl") {
-    noiseTex = TextureFromFile("noiseTex128.png", "../textures/", D3D, false);
-    detailNoiseTex = TextureFromFile("noiseTex32.png", "../textures/", D3D, false);
-    coverageTex = TextureFromFile("coverage1024.png", "../textures/", D2D, false);
-    blueNoise = TextureFromFile("HDR_L_0.png", "../textures/", D2D, false);
+    noiseTex = new Texture("noiseTex128.png", "../textures/", "noise", D3D);
+    detailNoiseTex = new Texture("noiseTex32.png", "../textures/", "noise", D3D);
+    coverageTex = new Texture("coverage1024.png", "../textures/", "noise");
+    blueNoise = new Texture("HDR_L_0.png", "../textures/", "noise");
 
     renderContext = _renderContext;
 
@@ -36,16 +31,16 @@ void Clouds::SetRenderContext(Render* _renderContext) {
 void Clouds::sendUniforms(Light light, Camera camera) {
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, noiseTex);
+    glBindTexture(GL_TEXTURE_3D, noiseTex->id);
 
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_3D, detailNoiseTex);
+    glBindTexture(GL_TEXTURE_3D, detailNoiseTex->id);
 
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, coverageTex);
+    glBindTexture(GL_TEXTURE_2D, coverageTex->id);
 
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, blueNoise);
+    glBindTexture(GL_TEXTURE_2D, blueNoise->id);
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, renderContext->frameTex);
@@ -77,9 +72,14 @@ void Clouds::sendUniforms(Light light, Camera camera) {
     shader.setFloat("mie_intensity", mie_intensity);
     shader.setFloat("absorption_intensity", absorption_intensity);
 
+    shader.setFloat("ap_world_intensity", ap_world_intensity);
+    shader.setFloat("ap_cloud_intensity", ap_cloud_intensity);
+
     shader.setFloat("lightIntensity", light.intensity);
     shader.setVec3("lightDir", light.getDir());
     shader.setVec3("lightColor", light.color);
+
+    shader.setVec3("ambientColor", ambientColor);
 
     shader.setFloat("g", hg_g);
     shader.setFloat("silver_intensity", silver_intensity);
@@ -102,8 +102,13 @@ void Clouds::sendUniforms(Light light, Camera camera) {
     shader.setFloat("cloudTopRoundness", cloudTopRoundness);
     shader.setFloat("cloudBottomRoundness", cloudBottomRoundness);
 
+    shader.setFloat("attinuationScalar", attinuationScalar);
+    shader.setFloat("attinuationClamp", attinuationClamp);
+
     shader.setFloat("cloudRadius", cloudRadius);
     shader.setVec3("cloudCenter", cloudCenter);
+
+    shader.setFloat("time", time);
 
     shader.setInt("noisetex", 0);
     shader.setInt("detailNoiseTex", 1);
@@ -114,16 +119,16 @@ void Clouds::sendUniforms(Light light, Camera camera) {
 }
 void Clouds::sendDepthUniforms(Light light, Camera camera) {
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, noiseTex);
+    glBindTexture(GL_TEXTURE_3D, noiseTex->id);
 
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_3D, detailNoiseTex);
+    glBindTexture(GL_TEXTURE_3D, detailNoiseTex->id);
 
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, coverageTex);
+    glBindTexture(GL_TEXTURE_2D, coverageTex->id);
 
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, blueNoise);
+    glBindTexture(GL_TEXTURE_2D, blueNoise->id);
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, renderContext->depthTex);
@@ -213,4 +218,3 @@ void Clouds::initFBO() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-#endif 

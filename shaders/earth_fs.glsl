@@ -23,7 +23,7 @@ uniform float ray_intensity;
 uniform float mie_intensity;
 uniform float absorption_intensity;
 
-uniform sampler2D earthTex;
+uniform sampler2D texture_diffuse;
 uniform sampler2D shadowMap;
 uniform sampler2D blueNoise;
 
@@ -40,6 +40,52 @@ float random(vec4 seed4) {
     float dot_product = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
     return fract(sin(dot_product) * 43758.5453);
 }
+
+float linstep(float low, float high, float v) {
+    return clamp((v-low)/(high-low), 0.0, 1.0);
+}
+
+float varShadowMapSample(vec2 coords, float compare) {
+    vec2 moments = texture(shadowMap, coords.xy).xy;
+    float p = step(compare, moments.x);
+    float variance = max(moments.y - moments.x * moments.x, 0.00002);
+
+    float d = compare - moments.x;
+    float pMax = linstep(0.2, 1.0, variance / ( variance + d*d));
+
+    return min(max(p, pMax), 1.f);
+}
+
+float sampleShadowMap(sampler2D map, vec2 coord, float compare) {
+    return step(texture(map, coord).r, compare);
+}
+
+float shadowMix(sampler2D map, vec2 coord, vec2 texelSize, float compare){
+    vec2 pos = coord/texelSize + vec2(0.5);
+    vec2 fracpart = fract(pos);
+    vec2 startTexel = (pos - fracpart) * texelSize;
+
+    float bl_texel = sampleShadowMap(map, startTexel, compare);
+    float br_texel = sampleShadowMap(map, startTexel + vec2(texelSize.x, 0.0), compare);
+    float tl_texel = sampleShadowMap(map, startTexel + vec2(0.0, texelSize.y), compare);
+    float tr_texel = sampleShadowMap(map, startTexel + texelSize, compare);
+    
+    float mixA = mix(bl_texel, tl_texel, fracpart.y);
+    float mixB = mix(br_texel, tr_texel, fracpart.y);
+
+    return mix(mixA, mixB, fracpart.x);
+}
+
+float offset_lookup(sampler2D map, vec3 loc, vec2 offset, float bias) {
+    vec2 texmapscale = 1.0 / textureSize(map, 0);
+    float pcfDepth = texture(map, loc.xy + offset * texmapscale).r;
+    return loc.z - bias > pcfDepth  ? 1.0 : 0.0;
+} 
+
+vec2 remap(vec2 x, vec2 low1, vec2 high1, vec2 low2, vec2 high2){
+	return low2 + (x - low1) * (high2 - low2) / (high1 - low1);
+}
+
 void solveQuadratic(float a, float b, float c, float d, out float t0, out float t1) {
     if (d > 0.0) {
 		t0 = max((-b - sqrt(d))/(2.0*a), 0.0);
@@ -96,12 +142,20 @@ vec3 directLightColor(vec3 currentPos, vec3 lightDir) {
 	float s0, s1;
 	float lightRayLength = sphereIntersect(planetCenter, atmosphereRadius, currentPos, lightDir).y;
 
+    if (lightRayLength > 0) {
+        lightRayLength -= s0;
+    }
+
     float lightOpticalDepth_ray, lightOpticalDepth_mie; 
     atmoRayLight(currentPos, lightDir, lightRayLength, lightOpticalDepth_ray, lightOpticalDepth_mie);
 
-    vec3 outScatter = exp(-lightOpticalDepth_mie*beta_mie)*exp(-lightOpticalDepth_ray*beta_ray)*exp(-lightOpticalDepth_ray*beta_ozone);
+    vec3 outScatter = exp(lightOpticalDepth_mie*beta_mie)*exp(-lightOpticalDepth_ray*beta_ray)*exp(-lightOpticalDepth_ray*beta_ozone);
 
-    return ( outScatter ) * ( lightColor );
+    vec3 color = ( outScatter ) * ( lightColor );
+    //color = clamp(color, vec3(0.f), vec3(1.f));
+    //color = remap(color, vec3(0.f), vec3(lightIntensity), vec3(0.f), vec3(1.f));
+
+    return color;
 }
 
 // https://learnopengl.com/code_viewer_gh.php?code=src/5.advanced_lighting/3.1.3.shadow_mapping/3.1.3.shadow_mapping.fs
@@ -120,59 +174,23 @@ float shadowCalculation(vec4 fragPosLightSpace) {
 
     //float epsilon = remap(currentDepth, 1.f, 250.f, 0.f, 1.f) * ; 
 
-    //float bias = max(texelSize.x * (1.0 - dot(normal, lightDir)), texelSize.x*5);
+    float bias = max(texelSize.x * (1.0 - dot(normal, lightDir)), texelSize.x*5);
     float cosTheta = clamp(dot(normal,lightDir), 0.f, 1.f);
-    float bias = clamp(0.005*tan(acos(cosTheta)), 0.f, 0.001);
+    //float bias = clamp(0.005*tan(acos(cosTheta)), 0.f, 0.001);
 
-    // PCF
-    /*
-    float shadow = 1.0;
-    for(int x = -2; x <= 2; ++x)
-    {
-        for(int y = -2; y <= 2; ++y)
-        {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
-        }    
-    }
-    shadow /= 25.0;*/
-    /*
-    float shadow = 1.0;
-    if ( texture( shadowMap, projCoords.xy ).r  <  projCoords.z-bias){
-        shadow = 0.0;
-    }*/
-    
-    float shadow = 1.0;
-    //for (int i = 0; i < 64; i++){
-    //    int index = int(64.0*random(vec4(gl_FragCoord.xyy, i)))%64;
-    //    if (texture( shadowMap, projCoords.xy + poissonDisk[index]*texelSize ).r  <  projCoords.z-bias){
-    //        shadow -= (1.f/64.f);
-    //    }
-    //}
+    //vec2 bn = texture(blueNoise, gl_FragCoord.xy*0.02).xy*0.01;
 
-    /*float shadow = 1.0;
-    for (int i = 0; i < 64; i++){
-        float bn = texture(blueNoise, gl_FragCoord.xy*.f).r;
-        if (texture( shadowMap, projCoords.xy+bn*texelSize ).r  <  projCoords.z-bias){
-            shadow -= (1.f/64.f);
-        }
-    }*/
-
-    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    //if(projCoords.z > 1.0)
-    //    shadow = 0.0;
-        
-    return shadow;
+    return varShadowMapSample(projCoords.xy, projCoords.z);
 }
 
 void main() {
-    vec3 lightColor = directLightColor(FragPos, lightDir);
+    vec3 lightColor = directLightColor(FragPos, lightDir)*2.f;
     //vec3 objectColor = vec3(0.5,0.5,0.5);
-    vec3 objectColor = vec3(0.5,0.5,0.5);//texture(earthTex, TexCoord).xyz;
+    vec3 objectColor = texture(texture_diffuse, TexCoord).xyz;
     // ambient
-    float ambientStrength = 0.1;
+    float ambientStrength = 1.0;
     //vec3 ambient = vec3(0.1,0.2,0.3);//1.0 * lightColor;
-    vec3 ambient = vec3(0.1);//1.0 * lightColor;
+    vec3 ambient = vec3(0.1,0.2,0.33)*ambientStrength;//1.0 * lightColor;
   	
     // diffuse 
     vec3 norm = normalize(Normal);
@@ -186,9 +204,9 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * lightColor;  
 
-    //float shadow = shadowCalculation(FragPosLS);
+    float shadow = shadowCalculation(FragPosLS);
         
-    //vec3 result = (ambient + (shadow) * diffuse) * objectColor;
-    vec3 result = (ambient + diffuse) * objectColor;
+    vec3 result = (ambient + (shadow) * diffuse) * objectColor;
+
     FragColor = vec4(result, 1.0);
 } 

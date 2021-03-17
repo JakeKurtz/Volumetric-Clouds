@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PBROBJ_H
+#define PBROBJ_H
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,14 +17,23 @@ public:
 	vec3 obj_scale;
 	mat4 model_mat = mat4();
 	Model model;
+	Shader shader;
 
-	PBRobj(const char* filepath, vec3 _position = vec3(0.f), vec3 _scale = vec3(1.f)) : model(filepath) {
+	PBRobj(const char* filepath, vec3 _position = vec3(0.f), vec3 _scale = vec3(1.f)) : model(filepath), shader("../shaders/earth_vs.glsl", "../shaders/earth_fs.glsl") {
 		position = _position;
 		obj_scale = _scale;
 	}
-	PBRobj(const char* filepath, vec3 _position = vec3(0.f), float _scale = 1.f) : model(filepath) {
+	PBRobj(const char* filepath, vec3 _position = vec3(0.f), float _scale = 1.f) : model(filepath), shader("../shaders/earth_vs.glsl", "../shaders/earth_fs.glsl") {
 		position = _position;
 		obj_scale = vec3(_scale);
+	}
+
+	void setShader(Shader _shader) {
+		shader = _shader;
+	}
+
+	void draw() {
+		model.Draw(shader);
 	}
 
 	void updateTRS() {
@@ -42,3 +52,4 @@ public:
 		position = _position;
 	}
 };
+#endif
