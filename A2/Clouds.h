@@ -8,6 +8,7 @@
 #include "Model.h"
 #include "Render.h"
 #include "Texture.h"
+#include "FrameBUffer.h"
 
 class Render;
 
@@ -59,6 +60,8 @@ public:
     glm::mat4 model_mat;
 
     Render* renderContext;
+
+    FrameBuffer* fb;
 
     unsigned int frameTex;
     unsigned int depthTex;

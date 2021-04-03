@@ -23,6 +23,11 @@ uniform float ray_intensity;
 uniform float mie_intensity;
 uniform float absorption_intensity;
 
+uniform float Ka;
+uniform float Ks;
+
+uniform float roughness;
+
 uniform sampler2D texture_diffuse;
 uniform sampler2D shadowMap;
 uniform sampler2D blueNoise;
@@ -82,9 +87,40 @@ float offset_lookup(sampler2D map, vec3 loc, vec2 offset, float bias) {
     return loc.z - bias > pcfDepth  ? 1.0 : 0.0;
 } 
 
-vec2 remap(vec2 x, vec2 low1, vec2 high1, vec2 low2, vec2 high2){
+float remap(float x, float low1, float high1, float low2, float high2){
 	return low2 + (x - low1) * (high2 - low2) / (high1 - low1);
 }
+
+float Beckmann_NDF(vec3 normal, vec3 halfway) {
+	float NH = acos(max(0.0, dot(normal, halfway)));
+	float r2 = pow(roughness, 2);
+	float cos4a = pow(cos(NH), 4);
+	return exp(-pow(( tan(NH) / roughness), 2)) / (PI * r2 * cos4a );
+}
+
+float GGXTR_NDF(vec3 normal, vec3 halfway){
+	float a2 = pow(roughness*roughness, 2);
+	float NH2 = pow(max(0.0, dot(normal, halfway)), 2);
+	return a2 / ( PI*(pow(NH2*(a2 - 1.f) + 1.f, 2)) );
+}
+
+float GeoAtten(vec3 lightDir, vec3 viewDir, vec3 normal) {
+
+	float k = pow( roughness + 1, 2 ) / 8;
+
+	float NL = max(dot(normal, lightDir), 0.0);
+	float NV = max(dot(normal, viewDir), 0.0);
+
+	float G1 = NL / (NL*( 1.f - k ) + k );
+	float G2 = NV / (NV*( 1.f - k ) + k );
+
+	return G1 * G2;
+}
+
+vec3 Fresnel(vec3 F0, vec3 halfway, vec3 viewDir) {
+	return F0 + ( 1 - F0 ) * pow(1 - max(0.0, dot(halfway, viewDir)), 5);
+}
+
 
 void solveQuadratic(float a, float b, float c, float d, out float t0, out float t1) {
     if (d > 0.0) {
@@ -149,13 +185,17 @@ vec3 directLightColor(vec3 currentPos, vec3 lightDir) {
     float lightOpticalDepth_ray, lightOpticalDepth_mie; 
     atmoRayLight(currentPos, lightDir, lightRayLength, lightOpticalDepth_ray, lightOpticalDepth_mie);
 
-    vec3 outScatter = exp(lightOpticalDepth_mie*beta_mie)*exp(-lightOpticalDepth_ray*beta_ray)*exp(-lightOpticalDepth_ray*beta_ozone);
+    float density_ray = atmoDensity(currentPos, scaleHeight_rayleigh);
+    float density_mie = atmoDensity(currentPos, scaleHeight_mie);
+
+    vec3 outScatter = exp(-lightOpticalDepth_mie*beta_mie)*exp(-lightOpticalDepth_ray*beta_ray)*exp(-lightOpticalDepth_ray*beta_ozone);
+
+    vec3 inScatter_ray = density_ray * outScatter;
+    vec3 inScatter_mie = density_mie * outScatter;
 
     vec3 color = ( outScatter ) * ( lightColor );
-    //color = clamp(color, vec3(0.f), vec3(1.f));
-    //color = remap(color, vec3(0.f), vec3(lightIntensity), vec3(0.f), vec3(1.f));
 
-    return color;
+    return 1.f - exp(-(inScatter_ray+inScatter_mie*beta_mie));
 }
 
 // https://learnopengl.com/code_viewer_gh.php?code=src/5.advanced_lighting/3.1.3.shadow_mapping/3.1.3.shadow_mapping.fs
@@ -183,30 +223,45 @@ float shadowCalculation(vec4 fragPosLightSpace) {
     return varShadowMapSample(projCoords.xy, projCoords.z);
 }
 
+float luminance(vec3 v)
+{
+    return dot(v, vec3(0.2126f, 0.7152f, 0.0722f));
+}
+
 void main() {
-    vec3 lightColor = directLightColor(FragPos, lightDir)*2.f;
-    //vec3 objectColor = vec3(0.5,0.5,0.5);
+    vec3 lightColor = directLightColor(FragPos, lightDir);
+
+    vec3 normal = normalize(Normal);
+	vec3 viewDir = normalize(camPos - FragPos);
+
     vec3 objectColor = texture(texture_diffuse, TexCoord).xyz;
-    // ambient
-    float ambientStrength = 1.0;
-    //vec3 ambient = vec3(0.1,0.2,0.3);//1.0 * lightColor;
-    vec3 ambient = vec3(0.1,0.2,0.33)*ambientStrength;//1.0 * lightColor;
-  	
-    // diffuse 
-    vec3 norm = normalize(Normal);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
+
+	// AMBIENT
+	vec3 ambient = Ka * vec3(1.0f);
+
+	// SPECULAR
+	vec3 specular = vec3(0.f);
+
+	// DIFFUSE 
+	float Kd = 1.f;
+	vec3 diffuse = Kd * objectColor;
+	diffuse /= PI;
     
-    // specular
-    float specularStrength = 0.5;
-    vec3 viewDir = normalize(FragPos - camPos);
-    vec3 reflectDir = reflect(lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lightColor;  
+    vec3 Fs = vec3(0.f);
+
+    vec3 halfway = normalize(viewDir + lightDir);
+
+    float D = GGXTR_NDF(normal, halfway);
+    float G = GeoAtten(lightDir, viewDir, normal);
+    vec3 F = Fresnel(vec3(0.21, 0.21, 0.21), halfway, viewDir);
+
+    specular = (D * G * F) / (4 * dot(lightDir, normal) * dot(viewDir, normal));
+    vec3 E = vec3(lightIntensity) * lightColor * dot(normal, lightDir);
+    Fs += E * (Ks*specular + diffuse);
 
     float shadow = shadowCalculation(FragPosLS);
         
-    vec3 result = (ambient + (shadow) * diffuse) * objectColor;
+    vec3 result = (ambient + Fs);
 
     FragColor = vec4(result, 1.0);
 } 

@@ -14,10 +14,14 @@ Clouds::Clouds(Render* _renderContext) : model("../models/sphere.obj"), shader("
     model_mat = glm::scale(model_mat, vec3(6250 + 6000 + 20));
 }
 void Clouds::Draw(Light _light, Camera camera) {
-    setColorFBO();
+
+    fb->bind();
+
     shader.use();
     sendUniforms(_light, camera);
     model.Draw(shader);
+
+    //fb->bind(Depth);
 
     //setDepthFBO();
     //depthShader.use();
@@ -27,7 +31,6 @@ void Clouds::Draw(Light _light, Camera camera) {
 void Clouds::SetRenderContext(Render* _renderContext) {
     renderContext = _renderContext;
 }
-
 void Clouds::sendUniforms(Light light, Camera camera) {
 
     glActiveTexture(GL_TEXTURE0);
@@ -43,10 +46,10 @@ void Clouds::sendUniforms(Light light, Camera camera) {
     glBindTexture(GL_TEXTURE_2D, blueNoise->id);
 
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, renderContext->frameTex);
+    glBindTexture(GL_TEXTURE_2D, renderContext->fbo->color_attachments[0]->id);
 
     glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, renderContext->depthTex);
+    glBindTexture(GL_TEXTURE_2D, renderContext->fbo_depth->depth_attachment->id);
 
     shader.setMat4("model", model_mat);
     shader.setMat4("projection", camera.GetProjMatrix(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
@@ -131,7 +134,7 @@ void Clouds::sendDepthUniforms(Light light, Camera camera) {
     glBindTexture(GL_TEXTURE_2D, blueNoise->id);
 
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, renderContext->depthTex);
+    glBindTexture(GL_TEXTURE_2D, renderContext->fbo_depth->depth_attachment->id);
 
     shader.setMat4("model", model_mat);
     shader.setMat4("projection", camera.GetProjMatrix(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
@@ -172,49 +175,8 @@ void Clouds::sendDepthUniforms(Light light, Camera camera) {
     shader.setInt("blueNoise", 3);
     shader.setInt("cameraDepthTexture", 4);
 }
-void Clouds::setColorFBO() {
-    glViewport(0, 0, renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-};
-void Clouds::setDepthFBO() {
-    glViewport(0, 0, renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthBuffer);
-    glClear(GL_DEPTH_BUFFER_BIT);
-};
-void Clouds::setDepthTex() {
-    glBindTexture(GL_TEXTURE_2D, depthTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-}
-void Clouds::setFrameTex() {
-    glBindTexture(GL_TEXTURE_2D, frameTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-}
 void Clouds::initFBO() {
-    glGenFramebuffers(1, &frameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
-    glGenTextures(1, &frameTex);
-    setFrameTex();
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameTex, 0);
-
-    glGenFramebuffers(1, &depthBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthBuffer);
-
-    glGenTextures(1, &depthTex);
-    setDepthTex();
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, depthTex, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    fb = new FrameBuffer(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT);
+    fb->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA16F, GL_RGBA, GL_FLOAT);
+    fb->attachDepthBuffer(GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT);
 }

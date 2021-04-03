@@ -44,7 +44,7 @@ int SCR_WIDTH = 1920;
 int SCR_HEIGHT = 1080;
 
 // camera settings
-Camera camera(glm::vec3(0.f, 6005.f, 50.f));
+Camera camera(glm::vec3(0.f, 6005.f, 0.f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -191,19 +191,23 @@ int main()
     */
     vector<PBRobj*> objects;
 
-    Light light(directional, glm::vec3(0,1,0), glm::vec3(1.f), 31.f, true);
+    Light light(directional, glm::vec3(0,1,0), glm::vec3(0.31f), 31.f, true);
 
     light.direction = glm::normalize(glm::vec3(1.f, 1.f, 1.f));
 
-    PBRobj sphere1("../models/sphere.obj", glm::vec3(0.f,6003.f,0.f), 1.f);
-    PBRobj sphere2("../models/sphere.obj", glm::vec3(3.f,6003.f,0.f), 1.f);
-    PBRobj sphere3("../models/sphere.obj", glm::vec3(-3.f,6003.f,0.f), 1.f);
+    PBRobj sphere1("../models/sphere.obj", glm::vec3(0.f,6005.f,-100.f), 100.f);
+    PBRobj sphere2("../models/sphere.obj", glm::vec3(3.f,6010.f,0.f), 1.f);
+    PBRobj sphere3("../models/sphere.obj", glm::vec3(-3.f,6015.f,0.f), 1.f);
+    PBRobj sun("../models/sphere.obj", glm::vec3(0.f,6000.f,0.f), 100.f);
     PBRobj celestialSphere("../models/celestial/celestial.obj", glm::vec3(0.f), 12000.f);
     PBRobj plane("../models/plane.obj", glm::vec3(0.f,6000.f,0.f), 100.f);
     PBRobj mountain("../models/mountain/Mountain.obj", glm::vec3(0.f,6001.f,0.f), 0.15f);
 
     Shader starShader("../shaders/star_vs.glsl", "../shaders/star_fs.glsl");
+    Shader sunShader("../shaders/sun_vs.glsl", "../shaders/sun_fs.glsl");
+
     celestialSphere.setShader(starShader);
+    sun.setShader(sunShader);
 
     Render* render = new Render(&camera, 1920, 1080);
     Clouds* clouds = new Clouds(render);
@@ -213,6 +217,7 @@ int main()
     //objects.push_back(&sphere1);
     //objects.push_back(&sphere2);
     //objects.push_back(&sphere3);
+    objects.push_back(&sun);
     objects.push_back(&celestialSphere);
     objects.push_back(&mountain);
 
@@ -233,17 +238,18 @@ int main()
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_3D);
 
-        glEnable(GL_FRAMEBUFFER_SRGB);
+        //glEnable(GL_FRAMEBUFFER_SRGB);
+
+        sun.translate(camera.Position+light.getDir() * 8000.f);
 
         celestialSphere.translate(camera.Position);
 
-        clouds->time = i;
+        //clouds->time = i;
 
         render->Draw(objects, light, camera);
+        //glDisable(GL_FRAMEBUFFER_SRGB);
 
-        glDisable(GL_FRAMEBUFFER_SRGB);
-
-        clouds->Draw(light, camera);
+        //clouds->Draw(light, camera);
 
         #pragma region skyShader
         /*
@@ -361,8 +367,17 @@ int main()
         //ImGui::Text("FOV");
         //ImGui::DragFloat("##fov", &camera.Zoom, 1, 1.f, 90.f, "%.5f");
 
-        //ImGui::Text("Exposure");
-        //ImGui::DragFloat("##exposure", &exposure, 0.01, 0.f, 1.f, "%.2f");
+        ImGui::Text("Roughness: %f", mountain.roughness);
+        ImGui::SliderFloat("", &mountain.roughness, 0.001f, 1.0f, "%.3f");
+
+        ImGui::Text("Ka: %f", mountain.Ka);
+        ImGui::SliderFloat(" ", &mountain.Ka, 0.0f, 1.0f, "%.2f");
+
+        ImGui::Text("Ks: %f", mountain.Ks);
+        ImGui::SliderFloat("  ", &mountain.Ks, 0.0f, 1.0f, "%.2f");
+
+        ImGui::Text("Exposure");
+        ImGui::DragFloat("##exposure", &camera.Exposure, 0.01, 0.f, 1.f, "%.2f");
         
         if (ImGui::TreeNode("Atmosphere Settings"))
         {

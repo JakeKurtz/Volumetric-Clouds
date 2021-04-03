@@ -222,7 +222,7 @@ vec3 atmoRayMarch(vec3 rayOrigin, vec3 rayDir, float rayLength, out vec3 opacity
 
     opacity = exp(-(beta_mie * viewOpticalDepth_mie + beta_ray * viewOpticalDepth_ray + beta_ozone * viewOpticalDepth_ray));
 
-	return ((inScatter_ray * beta_ray * phase_ray) + (inScatter_mie * beta_mie * phase_mie)) * (lightIntensity * lightColor * 2.f) + vec3(0.f) * opacity;
+	return ((inScatter_ray * beta_ray * phase_ray) + (inScatter_mie * beta_mie * phase_mie)) * (lightIntensity * lightColor) + vec3(0.f) * opacity;
 }
 
 float cloudDensity(vec3 p, out float DA) {
@@ -476,7 +476,7 @@ void main() {
 
     // Render clouds
     bar = min(worldDepth, dstInsideAtmo);
-    float cloudDepth;//= 1e32f;
+    float cloudDepth;//= 1e32f; 
     float cloudOpacity;// = 0.f;
     vec3 cloudColor = cloudRayMarch(rayDir, rayPos, cloudDepth, cloudOpacity);
 
@@ -494,11 +494,11 @@ void main() {
     //atmoColor = max(atmoColor, vec3(0.f,0.05f,0.1));
 
     // Compute final image
-    float test = atmoRayLength/dstInsideAtmo;
-    vec3 star = texture(screenTexture, gl_FragCoord.xy/iResolution.xy).rgb;
-    float x = saturate(luminance(atmoColor).r*2.5);
-    float y = saturate(luminance(star).r-x)*test;
-    atmoColor = star*y + atmoColor*x;
+    //float test = atmoRayLength/dstInsideAtmo;
+    //vec3 star = texture(screenTexture, gl_FragCoord.xy/iResolution.xy).rgb;
+    //float x = saturate(luminance(atmoColor).r*2.5);
+    //float y = saturate(luminance(star).r-x)*test;
+    //atmoColor = star*y + atmoColor*x;
 
     vec3 mainColor = texture(screenTexture, gl_FragCoord.xy/iResolution.xy).rgb;
 

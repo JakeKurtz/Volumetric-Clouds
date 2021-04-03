@@ -19,6 +19,10 @@ public:
 	Model model;
 	Shader shader;
 
+	float roughness = 0.001;
+	float Ka = 0.f;
+	float Ks = 0.f;
+
 	PBRobj(const char* filepath, vec3 _position = vec3(0.f), vec3 _scale = vec3(1.f)) : model(filepath), shader("../shaders/earth_vs.glsl", "../shaders/earth_fs.glsl") {
 		position = _position;
 		obj_scale = _scale;

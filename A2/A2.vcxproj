@@ -135,6 +135,7 @@
     <ClCompile Include="..\middleware\imgui\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\middleware\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\middleware\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Clouds.cpp" />
@@ -144,6 +145,8 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Clouds.h" />
     <ClInclude Include="EdgeBuffer.h" />
+    <ClInclude Include="FrameBuffer.h" />
+    <ClInclude Include="Attachment.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Mesh.h" />

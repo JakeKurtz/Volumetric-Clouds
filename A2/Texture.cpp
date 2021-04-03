@@ -7,6 +7,25 @@ Texture::Texture() {
     path = "None";
     dim = D2D;
 }
+Texture::Texture(int width, int height, GLenum attachment, GLint internalformat, GLenum format, GLenum type) {
+
+    glGenFramebuffers(1, &frameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, type, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, id, 0);
+
+    //glGenRenderbuffers(1, &frameRbo);
+    //glBindRenderbuffer(GL_RENDERBUFFER, frameRbo);
+    //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+    //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, frameRbo);
+
+}
 Texture::Texture(const char* _path, const string& directory, string _type, dimension _dim, bool gamma)
 {
 
