@@ -28,7 +28,7 @@ public:
 
 	FrameBuffer* fbo;
 
-	Light(light_type _type = directional, vec3 _position = vec3(0.f), vec3 _color = vec3(0.3f), float _intensity = 30.f, bool shadows = false) : shdwMapShader("../shaders/lightDepth_vs.glsl", "../shaders/lightDepth_fs.glsl"){
+	Light(light_type _type = directional, vec3 _position = vec3(0.f), vec3 _color = vec3(0.3f), float _intensity = 30.f, bool shadows = false) : shdwMapShader("../shaders/shadowMap_depth_vs.glsl", "../shaders/shadowMap_depth_fs.glsl"){
 		position = _position;
 		color = _color;
 		intensity = _intensity;

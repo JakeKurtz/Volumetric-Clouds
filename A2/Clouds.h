@@ -6,11 +6,11 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "Model.h"
-#include "Render.h"
+#include "RenderContext.h"
 #include "Texture.h"
 #include "FrameBUffer.h"
 
-class Render;
+class RenderContext;
 
 class Clouds 
 {
@@ -59,21 +59,20 @@ public:
     Model model;
     glm::mat4 model_mat;
 
-    Render* renderContext;
+    RenderContext* renderContext;
 
     FrameBuffer* fb;
 
     unsigned int frameTex;
     unsigned int depthTex;
 
-    Clouds(Render* _renderContext);
+    Clouds(RenderContext* _renderContext);
     void Draw(Light _light, Camera camera);
-    void SetRenderContext(Render* _renderContext);
+    void SetRenderContext(RenderContext* _renderContext);
 
 private:
 
     Shader shader;
-    Shader depthShader;
 
     Texture* noiseTex;
     Texture* detailNoiseTex;

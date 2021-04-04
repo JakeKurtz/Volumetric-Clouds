@@ -23,11 +23,11 @@ public:
 	float Ka = 0.f;
 	float Ks = 0.f;
 
-	PBRobj(const char* filepath, vec3 _position = vec3(0.f), vec3 _scale = vec3(1.f)) : model(filepath), shader("../shaders/earth_vs.glsl", "../shaders/earth_fs.glsl") {
+	PBRobj(const char* filepath, vec3 _position = vec3(0.f), vec3 _scale = vec3(1.f)) : model(filepath), shader("../shaders/pbr_vs.glsl", "../shaders/pbr_fs.glsl") {
 		position = _position;
 		obj_scale = _scale;
 	}
-	PBRobj(const char* filepath, vec3 _position = vec3(0.f), float _scale = 1.f) : model(filepath), shader("../shaders/earth_vs.glsl", "../shaders/earth_fs.glsl") {
+	PBRobj(const char* filepath, vec3 _position = vec3(0.f), float _scale = 1.f) : model(filepath), shader("../shaders/pbr_vs.glsl", "../shaders/pbr_fs.glsl") {
 		position = _position;
 		obj_scale = vec3(_scale);
 	}

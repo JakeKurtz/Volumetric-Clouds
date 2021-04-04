@@ -1,5 +1,5 @@
-#ifndef RENDER_H
-#define RENDER_H
+#ifndef RENDERCONTEXT_H
+#define RENDERCONTEXT_H
 
 #include "Light.h"
 #include "PBRobj.h"
@@ -11,7 +11,7 @@
 
 class Clouds;
 
-class Render {
+class RenderContext {
 
 public:
     unsigned int shadowMapTempTarget;
@@ -24,17 +24,11 @@ public:
     FrameBuffer* fbo_sdwmap_tmptarget;
     FrameBuffer* fbo_hdr_tmptarget;
 
-    FrameBuffer* fbo_luminance_256;
-    FrameBuffer* fbo_luminance_128;
-    FrameBuffer* fbo_luminance_64;
-    FrameBuffer* fbo_luminance_32;
-    FrameBuffer* fbo_luminance_16;
-    FrameBuffer* fbo_luminance_4;
     FrameBuffer* fbo_luminance_1;
+    FrameBuffer* fbo_luminance_2;
 
     Shader depthShader;
-    Shader PBRShader;
-    Shader _filter;
+    Shader gaussFilter;
     Shader hdrShader;
     Shader luminanceShader;
 
@@ -46,7 +40,7 @@ public:
     Camera *camera;
     Clouds *clouds;
 
-    Render(Camera* _camera, int _SCR_WIDTH = 1000, int _SCR_HEIGHT = 1000);
+    RenderContext(Camera* _camera, int _SCR_WIDTH = 1000, int _SCR_HEIGHT = 1000);
 	
     void Draw(vector<PBRobj*> objects, Light light, Camera camera);
     void setScreenSize(int _SCR_WIDTH, int _SCR_HEIGHT);
@@ -65,6 +59,7 @@ private:
     void setDepthFBO();
     void initFBOs();
     void applyFilter(Shader filter, FrameBuffer* src, FrameBuffer* dst);
-    void computeSceneLuminance();
+    void meanLuminance(unsigned int texId);
+    void applyToneMapping(FrameBuffer* targetFB, aType targetAttachment, unsigned int texId);
 };
 #endif

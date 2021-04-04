@@ -17,7 +17,7 @@
 #include "PBRobj.h"
 #include "Light.h"
 
-#include "Render.h"
+#include "RenderContext.h"
 #include "Clouds.h"
 
 #include <iostream>
@@ -209,10 +209,9 @@ int main()
     celestialSphere.setShader(starShader);
     sun.setShader(sunShader);
 
-    Render* render = new Render(&camera, 1920, 1080);
-    Clouds* clouds = new Clouds(render);
-
-    render->setAtmosphere(clouds);
+    RenderContext* render_context = new RenderContext(&camera, 1920, 1080);
+    //Clouds* clouds = new Clouds(render);
+    //render->setAtmosphere(clouds);
 
     //objects.push_back(&sphere1);
     //objects.push_back(&sphere2);
@@ -246,7 +245,7 @@ int main()
 
         //clouds->time = i;
 
-        render->Draw(objects, light, camera);
+        render_context->Draw(objects, light, camera);
         //glDisable(GL_FRAMEBUFFER_SRGB);
 
         //clouds->Draw(light, camera);
@@ -383,33 +382,33 @@ int main()
         {
 
             ImGui::Text("Atmo Radius");
-            ImGui::SliderFloat("##atmosphereRadius", &clouds->atmosphereRadius, 1.0f, 100.f, "%.5f");
+            ImGui::SliderFloat("##atmosphereRadius", &render_context->clouds->atmosphereRadius, 1.0f, 100.f, "%.5f");
 
             ImGui::Text("Planet Radius");
-            ImGui::SliderFloat("##planetRadius", &clouds->planetRadius, 1.f, 500.f, "%.5f");
+            ImGui::SliderFloat("##planetRadius", &render_context->clouds->planetRadius, 1.f, 500.f, "%.5f");
 
             ImGui::Text("Cloud Aerial Perspective");
-            ImGui::DragFloat("##cloud_ap", &clouds->ap_cloud_intensity, 1.0, 1.0, 1000.0, "%0.2f");
+            ImGui::DragFloat("##cloud_ap", &render_context->clouds->ap_cloud_intensity, 1.0, 1.0, 1000.0, "%0.2f");
             
             ImGui::Text("World Aerial Perspective");
-            ImGui::DragFloat("##world_ap", &clouds->ap_world_intensity, 1.0, 1.0, 1000.0, "%0.2f");
+            ImGui::DragFloat("##world_ap", &render_context->clouds->ap_world_intensity, 1.0, 1.0, 1000.0, "%0.2f");
 
             if (ImGui::TreeNode("Scattering/Absorption Settings"))
             {
                 ImGui::Text("Rayleigh Scale Height");
-                ImGui::SliderFloat("##rsh", &clouds->scaleHeight_rayleigh, 0.001f, 10.f, "%.5f");
+                ImGui::SliderFloat("##rsh", &render_context->clouds->scaleHeight_rayleigh, 0.001f, 10.f, "%.5f");
 
                 ImGui::Text("Mie Scale Height");
-                ImGui::SliderFloat("##msh", &clouds->scaleHeight_mie, 0.001f, 1.f, "%.5f");
+                ImGui::SliderFloat("##msh", &render_context->clouds->scaleHeight_mie, 0.001f, 1.f, "%.5f");
 
                 ImGui::Text("Rayleigh Scattering Intensity");
-                ImGui::DragFloat("##ray_intensity", &clouds->ray_intensity, 0.1, 1.f, 1000.f, "%.f");
+                ImGui::DragFloat("##ray_intensity", &render_context->clouds->ray_intensity, 0.1, 1.f, 1000.f, "%.f");
 
                 ImGui::Text("Mie Scattering Intensity");
-                ImGui::DragFloat("##mie_intensity", &clouds->mie_intensity, 0.1, 1.f, 1000.f, "%.f");
+                ImGui::DragFloat("##mie_intensity", &render_context->clouds->mie_intensity, 0.1, 1.f, 1000.f, "%.f");
 
                 ImGui::Text("Absorption Intensity");
-                ImGui::DragFloat("##absorption_intensity", &clouds->absorption_intensity, 0.1, 1.f, 1000.f, "%.f");
+                ImGui::DragFloat("##absorption_intensity", &render_context->clouds->absorption_intensity, 0.1, 1.f, 1000.f, "%.f");
                 ImGui::TreePop();
             }
             ImGui::TreePop();
@@ -421,19 +420,19 @@ int main()
             ImGui::ColorEdit3("##color", (float*)&light.color);
 
             ImGui::Text("Ambient Color");
-            ImGui::ColorEdit3("##acolor", (float*)&clouds->ambientColor);
+            ImGui::ColorEdit3("##acolor", (float*)&render_context->clouds->ambientColor);
 
             ImGui::Text("Sun Intensity");
             ImGui::SliderFloat("##intensity", &light.intensity, 1.f, 100.0f, "%.4f");
 
             ImGui::Text("HG Eccentricity");
-            ImGui::SliderFloat("g", &clouds->hg_g, -1.f, 1.f, "%.6f");
+            ImGui::SliderFloat("g", &render_context->clouds->hg_g, -1.f, 1.f, "%.6f");
 
             ImGui::Text("Silver Intensity");
-            ImGui::SliderFloat("##silver_intensity", &clouds->silver_intensity, 0.f, 10.f, "%.6f");
+            ImGui::SliderFloat("##silver_intensity", &render_context->clouds->silver_intensity, 0.f, 10.f, "%.6f");
 
             ImGui::Text("Silver Spread");
-            ImGui::SliderFloat("##silver_spread", &clouds->silver_spread, 0.f, 0.99f, "%.6f");
+            ImGui::SliderFloat("##silver_spread", &render_context->clouds->silver_spread, 0.f, 0.99f, "%.6f");
 
             ImGui::Text("Sun Direction");
             ImGui::DragFloat3("##dir", (float*)&light.direction, 0.001, -1.f, 1.f, "%f");
@@ -445,69 +444,69 @@ int main()
         {
 
             ImGui::Text("Attinuation Intensity");
-            ImGui::DragFloat("##attinuationScalar", &clouds->attinuationScalar, 0.001f, 0.f, 1.f, "%.5f");            
+            ImGui::DragFloat("##attinuationScalar", &render_context->clouds->attinuationScalar, 0.001f, 0.f, 1.f, "%.5f");            
             
             ImGui::Text("Attinuation Clamp");
-            ImGui::DragFloat("##attinuationClamp", &clouds->attinuationClamp, 0.001f, 0.f, 1.f, "%.5f");
+            ImGui::DragFloat("##attinuationClamp", &render_context->clouds->attinuationClamp, 0.001f, 0.f, 1.f, "%.5f");
             
             if (ImGui::TreeNode("Density"))
             {
                 ImGui::Text("Density");
-                ImGui::SliderFloat("##Density", &clouds->density, 1.0f, 100.0f, "%.5f");
+                ImGui::SliderFloat("##Density", &render_context->clouds->density, 1.0f, 100.0f, "%.5f");
 
                 ImGui::Text("Top Density");
-                ImGui::SliderFloat("##Top Density", &clouds->topDensity, 0.01f, 1.0f, "%.4f");
+                ImGui::SliderFloat("##Top Density", &render_context->clouds->topDensity, 0.01f, 1.0f, "%.4f");
 
                 ImGui::Text("Bottom Density");
-                ImGui::SliderFloat("##Bottom Density", &clouds->bottomDensity, 0.f, 1.0f, "%.4f");
+                ImGui::SliderFloat("##Bottom Density", &render_context->clouds->bottomDensity, 0.f, 1.0f, "%.4f");
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("Coverage Noise"))
             {
                 ImGui::Text("Coverage Noise Intensity");
-                ImGui::DragFloat("##Coverage Intensity", &clouds->coverageIntensity, 0.001, 0.f, 1.f, "%.6f");
+                ImGui::DragFloat("##Coverage Intensity", &render_context->clouds->coverageIntensity, 0.001, 0.f, 1.f, "%.6f");
 
                 ImGui::Text("Coverage Noise Scale");
-                ImGui::SliderFloat("##Coverage Scale", &clouds->coverageScale, 0.001f, 0.01f, "%.6f");
+                ImGui::SliderFloat("##Coverage Scale", &render_context->clouds->coverageScale, 0.001f, 0.01f, "%.6f");
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("Shape Noise"))
             {
                 
                 ImGui::Text("Shape Noise Scale");
-                ImGui::SliderFloat("##Noise Scale", &clouds->noiseScale, 0.001f, 0.1f, "%.3f");
+                ImGui::SliderFloat("##Noise Scale", &render_context->clouds->noiseScale, 0.001f, 0.1f, "%.3f");
 
                 ImGui::Text("Shape Noise Intensity");
-                ImGui::DragFloat("##Noise Intensity", &clouds->noiseIntensity, 0.01, 0.f, 2.f, "%.6f");
+                ImGui::DragFloat("##Noise Intensity", &render_context->clouds->noiseIntensity, 0.01, 0.f, 2.f, "%.6f");
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("Detial Noise"))
             {
                 ImGui::Text("Detail Noise Scale");
-                ImGui::SliderFloat("##Detail Scale", &clouds->detailScale, 0.001f, 0.1f, "%.3f");
+                ImGui::SliderFloat("##Detail Scale", &render_context->clouds->detailScale, 0.001f, 0.1f, "%.3f");
 
                 ImGui::Text("Detail Noise Intensity");
-                ImGui::DragFloat("##Detail Intensity", &clouds->detailIntensity, 0.001, 0.f, 1.f, "%.6f");
+                ImGui::DragFloat("##Detail Intensity", &render_context->clouds->detailIntensity, 0.001, 0.f, 1.f, "%.6f");
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("Shape Settings"))
             {
                 ImGui::Text("Thickness");
-                ImGui::DragFloat("##Cloud Thickness", &clouds->thickness, 0.01, 0.01f, 10.f, "%.6f");
+                ImGui::DragFloat("##Cloud Thickness", &render_context->clouds->thickness, 0.01, 0.01f, 10.f, "%.6f");
 
                 ImGui::Text("Top Roundness");
-                ImGui::SliderFloat("##Top Roundness", &clouds->cloudTopRoundness, 0.f, 1.f, "%.6f");
+                ImGui::SliderFloat("##Top Roundness", &render_context->clouds->cloudTopRoundness, 0.f, 1.f, "%.6f");
 
                 ImGui::Text("Bottom Roundness");
-                ImGui::SliderFloat("##Bottom Roundness", &clouds->cloudBottomRoundness, 0.f, 1.f, "%.6f");
+                ImGui::SliderFloat("##Bottom Roundness", &render_context->clouds->cloudBottomRoundness, 0.f, 1.f, "%.6f");
                 ImGui::TreePop();
             }
 
             ImGui::Text("Cloud Shell Radius");
-            ImGui::DragFloat("##cloudRadius", &clouds->cloudRadius, 1.0, 1.f, 10000.f, "%.f");
+            ImGui::DragFloat("##cloudRadius", &render_context->clouds->cloudRadius, 1.0, 1.f, 10000.f, "%.f");
             
             ImGui::Text("Cloud Shell Center Y offset");
-            ImGui::DragFloat("##cloudCenter", &clouds->cloudCenter.y, 1.0, 1.f, 10000.f, "%.f");
+            ImGui::DragFloat("##cloudCenter", &render_context->clouds->cloudCenter.y, 1.0, 1.f, 10000.f, "%.f");
             
             ImGui::TreePop();
         }
@@ -530,10 +529,6 @@ int main()
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
-    //glDeleteFramebuffers(1, &textureColorbuffer);
-    //glDeleteFramebuffers(1, &cameraDepthTexture);
-    //glDeleteFramebuffers(1, &starbufTexture);
-    //glDeleteFramebuffers(1, &framebuffer);
     #pragma endregion
 
     return 0;

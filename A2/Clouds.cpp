@@ -1,6 +1,9 @@
 #include "Clouds.h"
 
-Clouds::Clouds(Render* _renderContext) : model("../models/sphere.obj"), shader("../shaders/sky_vs.glsl", "../shaders/sky_fs.glsl"), depthShader("../shaders/cloud_vs.glsl", "../shaders/cloud_fs.glsl") {
+Clouds::Clouds(RenderContext* _renderContext) : 
+    model("../models/sphere.obj"), 
+    shader("../shaders/sky_vs.glsl", "../shaders/sky_fs.glsl")
+{
     noiseTex = new Texture("noiseTex128.png", "../textures/", "noise", D3D);
     detailNoiseTex = new Texture("noiseTex32.png", "../textures/", "noise", D3D);
     coverageTex = new Texture("coverage1024.png", "../textures/", "noise");
@@ -28,7 +31,7 @@ void Clouds::Draw(Light _light, Camera camera) {
     //sendDepthUniforms(_light, camera);
     //model.Draw(depthShader);
 }
-void Clouds::SetRenderContext(Render* _renderContext) {
+void Clouds::SetRenderContext(RenderContext* _renderContext) {
     renderContext = _renderContext;
 }
 void Clouds::sendUniforms(Light light, Camera camera) {

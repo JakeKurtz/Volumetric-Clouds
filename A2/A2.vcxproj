@@ -137,7 +137,7 @@
     <ClCompile Include="..\middleware\imgui\imgui_widgets.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Render.cpp" />
+    <ClCompile Include="RenderContext.cpp" />
     <ClCompile Include="Clouds.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
@@ -152,7 +152,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="PBRobj.h" />
-    <ClInclude Include="Render.h" />
+    <ClInclude Include="RenderContext.h" />
     <ClInclude Include="Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
