@@ -40,6 +40,11 @@ const int MAX_LIGHT_SAMPLES = 5;
 const int MAX_VIEW_SAMPLES = 100;
 
 #define PI 3.14159265358979323846264338327
+
+float remap(float x, float low1, float high1, float low2, float high2){
+	return low2 + (x - low1) * (high2 - low2) / (high1 - low1);
+}
+
 // -- SHADOW METHODS -- //
 float linstep(float low, float high, float v) {
     return clamp((v-low)/(high-low), 0.0, 1.0);
@@ -153,7 +158,7 @@ vec2 sphereIntersect(vec3 center, float radius, vec3 rayOrigin, vec3 rayDir) {
     return vec2(distToSphere, distInSphere);
 }
 float atmoDensity(vec3 pos, float scaleHeight) {
-	float h = length(pos) - planetRadius;
+    float h = remap(pos.y, planetRadius, atmosphereRadius, 0.f, 1.f);
 	return exp(-(h / scaleHeight));
 }
 void atmoRayLight(vec3 rayOrigin, vec3 rayDir, float rayLength, out float lightOpticalDepth_ray, out float lightOpticalDepth_mie) {
@@ -232,7 +237,7 @@ void main() {
 
     float shadow = shadowCalculation(FragPosLS);
         
-    vec3 result = (ambient + Fs);
+    vec3 result = (ambient + (shadow*Fs));
 
     FragColor = vec4(result, 1.0);
 } 

@@ -24,12 +24,6 @@ void Clouds::Draw(Light _light, Camera camera) {
     sendUniforms(_light, camera);
     model.Draw(shader);
 
-    //fb->bind(Depth);
-
-    //setDepthFBO();
-    //depthShader.use();
-    //sendDepthUniforms(_light, camera);
-    //model.Draw(depthShader);
 }
 void Clouds::SetRenderContext(RenderContext* _renderContext) {
     renderContext = _renderContext;
@@ -62,8 +56,6 @@ void Clouds::sendUniforms(Light light, Camera camera) {
     shader.setVec3("camDir", camera.Front);
     shader.setVec3("camUp", camera.Up);
     shader.setVec3("camRight", camera.Right);
-
-    shader.setFloat("time", 0.f);
 
     shader.setVec2("iResolution", vec2(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
 

@@ -12,8 +12,6 @@ RenderContext::RenderContext(Camera* _camera, int _SCR_WIDTH, int _SCR_HEIGHT) :
     camera = _camera;
     blueNoise = new Texture("LDR_RG01_0.png", "../textures/", "noise");
 
-    clouds = new Clouds(this);
-
     initFBOs();
 }
 
@@ -47,19 +45,20 @@ void RenderContext::Draw(vector<PBRobj*> objects, Light light, Camera camera) {
         obj->model.Draw(obj->shader);
     }
     
-    clouds->time = 0;
-    clouds->Draw(light, camera);
+    if (clouds != nullptr) {
+        clouds->time = 0;
+        clouds->Draw(light, camera);
 
-    meanLuminance(clouds->fb->color_attachments[0]->id);
-    applyToneMapping(fbo, Main, clouds->fb->color_attachments[0]->id);
-
+        meanLuminance(clouds->fb->color_attachments[0]->id);
+        applyToneMapping(fbo, Main, clouds->fb->color_attachments[0]->id);
+    }
 }
 void RenderContext::setScreenSize(int _SCR_WIDTH, int _SCR_HEIGHT) {
     SCR_WIDTH = _SCR_WIDTH;
     SCR_HEIGHT = _SCR_HEIGHT;
 }
-void RenderContext::setAtmosphere(Clouds* _clouds) {
-    clouds = _clouds;
+void RenderContext::enableAtmosphere() {
+    clouds = new Clouds(this);;
 }
 
 void RenderContext::sendDepthUniforms(PBRobj* obj, Camera camera) {

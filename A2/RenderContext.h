@@ -38,7 +38,7 @@ public:
     int SCR_HEIGHT;
 
     Camera *camera;
-    Clouds *clouds;
+    Clouds *clouds = nullptr;
 
     RenderContext(Camera* _camera, int _SCR_WIDTH = 1000, int _SCR_HEIGHT = 1000);
 	
@@ -46,7 +46,7 @@ public:
     void setScreenSize(int _SCR_WIDTH, int _SCR_HEIGHT);
     void setDepthTex(int WIDTH, int HEIGHT);
     void setFrameTex(int WIDTH, int HEIGHT);
-    void setAtmosphere(Clouds* _clouds);
+    void enableAtmosphere();
 
 private:
 

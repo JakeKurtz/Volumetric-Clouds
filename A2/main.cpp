@@ -191,17 +191,17 @@ int main()
     */
     vector<PBRobj*> objects;
 
-    Light light(directional, glm::vec3(0,1,0), glm::vec3(0.31f), 31.f, true);
+    Light light(directional, glm::vec3(0,1,0), glm::vec3(1.f), 31.f, true);
 
     light.direction = glm::normalize(glm::vec3(1.f, 1.f, 1.f));
 
-    PBRobj sphere1("../models/sphere.obj", glm::vec3(0.f,6005.f,-100.f), 100.f);
+    PBRobj sphere1("../models/sphere.obj", glm::vec3(0.f,6005.f,-10.f), 1.f);
     PBRobj sphere2("../models/sphere.obj", glm::vec3(3.f,6010.f,0.f), 1.f);
     PBRobj sphere3("../models/sphere.obj", glm::vec3(-3.f,6015.f,0.f), 1.f);
     PBRobj sun("../models/sphere.obj", glm::vec3(0.f,6000.f,0.f), 100.f);
     PBRobj celestialSphere("../models/celestial/celestial.obj", glm::vec3(0.f), 12000.f);
     PBRobj plane("../models/plane.obj", glm::vec3(0.f,6000.f,0.f), 100.f);
-    PBRobj mountain("../models/mountain/Mountain.obj", glm::vec3(0.f,6001.f,0.f), 0.15f);
+    PBRobj mountain("../models/mountain2/mountain2.obj", glm::vec3(0.f,6010.f,-100.f), 5.f);
 
     Shader starShader("../shaders/star_vs.glsl", "../shaders/star_fs.glsl");
     Shader sunShader("../shaders/sun_vs.glsl", "../shaders/sun_fs.glsl");
@@ -210,12 +210,12 @@ int main()
     sun.setShader(sunShader);
 
     RenderContext* render_context = new RenderContext(&camera, 1920, 1080);
-    //Clouds* clouds = new Clouds(render);
-    //render->setAtmosphere(clouds);
+    render_context->enableAtmosphere();
 
     //objects.push_back(&sphere1);
     //objects.push_back(&sphere2);
     //objects.push_back(&sphere3);
+    //objects.push_back(&plane);
     objects.push_back(&sun);
     objects.push_back(&celestialSphere);
     objects.push_back(&mountain);
@@ -239,7 +239,7 @@ int main()
 
         //glEnable(GL_FRAMEBUFFER_SRGB);
 
-        sun.translate(camera.Position+light.getDir() * 8000.f);
+        sun.translate(camera.Position+light.getDir() * 10000.f);
 
         celestialSphere.translate(camera.Position);
 
@@ -396,7 +396,7 @@ int main()
             if (ImGui::TreeNode("Scattering/Absorption Settings"))
             {
                 ImGui::Text("Rayleigh Scale Height");
-                ImGui::SliderFloat("##rsh", &render_context->clouds->scaleHeight_rayleigh, 0.001f, 10.f, "%.5f");
+                ImGui::SliderFloat("##rsh", &render_context->clouds->scaleHeight_rayleigh, 0.001f, 1.f, "%.5f");
 
                 ImGui::Text("Mie Scale Height");
                 ImGui::SliderFloat("##msh", &render_context->clouds->scaleHeight_mie, 0.001f, 1.f, "%.5f");

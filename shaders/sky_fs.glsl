@@ -147,7 +147,7 @@ void sphereIntersect(vec3 center, float radius, vec3 rayOrigin, vec3 rayDir, out
 }
 
 float atmoDensity(vec3 pos, float scaleHeight) {
-	float h = length(pos) - planetRadius;
+    float h = remap(pos.y, planetRadius, atmosphereRadius, 0.f, 1.f);
 	return exp(-(h / scaleHeight));
 }
 void atmoRayLight(vec3 rayOrigin, vec3 rayDir, float rayLength, out float lightOpticalDepth_ray, out float lightOpticalDepth_mie) {
@@ -286,21 +286,27 @@ vec3 luminance(vec3 col) {
     return vec3(0.299*R + 0.587*G + 0.114*B);
 }
 vec3 directLightColor(vec3 currentPos, vec3 lightDir) {
-
-	float t0, lightRayLength;
-    sphereIntersect(planetCenter, atmosphereRadius, currentPos, lightDir, t0, lightRayLength);
+	float s0, lightRayLength;
+	sphereIntersect(planetCenter, atmosphereRadius, currentPos, lightDir, s0, lightRayLength);
 
     if (lightRayLength > 0) {
-        lightRayLength -= t0;
+        lightRayLength -= s0;
     }
 
-    float lightOpticalDepth_ray; 
-    float lightOpticalDepth_mie;
+    float lightOpticalDepth_ray, lightOpticalDepth_mie; 
     atmoRayLight(currentPos, lightDir, lightRayLength, lightOpticalDepth_ray, lightOpticalDepth_mie);
 
-    vec3 outScatter_ray = (beta_ray * lightOpticalDepth_ray) + (beta_ozone * lightOpticalDepth_ray) + (beta_mie * lightOpticalDepth_mie);
+    float density_ray = atmoDensity(currentPos, scaleHeight_rayleigh);
+    float density_mie = atmoDensity(currentPos, scaleHeight_mie);
 
-    return vec3(exp(-(outScatter_ray))*lightColor);
+    vec3 outScatter = exp(-lightOpticalDepth_mie*beta_mie)*exp(-lightOpticalDepth_ray*beta_ray)*exp(-lightOpticalDepth_ray*beta_ozone);
+
+    vec3 inScatter_ray = density_ray * outScatter;
+    vec3 inScatter_mie = density_mie * outScatter;
+
+    vec3 color = ( outScatter ) * ( lightColor );
+
+    return outScatter*lightColor;
 }
 vec3 ambientLightColor(vec3 light) {
     return clamp(luminance(light), vec3(0.2), vec3(0.8));
@@ -507,10 +513,14 @@ void main() {
     float ap_world = exp(-worldDepth/ap_world_intensity);
     float ap_clouds = exp(-cloudDepth/ap_cloud_intensity);
 
+    float lum_clouds = luminance(cloudColor).x;
+
+    float test = mix(0.f,ap_clouds,lum_clouds);
+
     //float test = mix(1.f, 0.f, pow(cloudDepth, ));
 
     vec3 finalColor = (atmoColor*(1.f-ap_world)+mainColor*ap_world) * (1.f - cloudOpacity);
-    finalColor += (atmoColor*(1.f-ap_clouds)+cloudColor*ap_clouds) * cloudOpacity;
+    finalColor += (atmoColor*(1.f-test)+cloudColor*test) * cloudOpacity;
 
-    FragColor = vec4(finalColor, 1.f);
+    FragColor = vec4(atmoColor, 1.f);
 }

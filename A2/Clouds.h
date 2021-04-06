@@ -35,27 +35,27 @@ public:
     float attinuationClamp = 0.258f;
 
     float planetRadius = 6000;
-    float atmosphereRadius = 7000;
-    float scaleHeight_rayleigh = 25;
-    float scaleHeight_mie = 25;
+    float atmosphereRadius = 10000;
+    float scaleHeight_rayleigh = 0.05267f;
+    float scaleHeight_mie = 0.25f;
 
-    float ray_intensity = 500;
-    float mie_intensity = 1.0;
-    float absorption_intensity = 40.0;
+    float ray_intensity = 50.f;
+    float mie_intensity = 1.f;
+    float absorption_intensity = 5.f;
 
-    float ap_cloud_intensity = 300.0;
+    float ap_cloud_intensity = 1200.0;
     float ap_world_intensity = 60.0;
 
-    float hg_g = 0.120690f;
+    float hg_g = -0.02f;
     float silver_intensity = 0.4f;
-    float silver_spread = 0.4f;
+    float silver_spread = 0.11f;
 
     float time = 1.f;
 
     vec3 ambientColor = vec3(50.f / 255.f, 61.f / 255.f, 76.f / 255.f);
 
-    float cloudRadius = 4000.f;
-    glm::vec3 cloudCenter = vec3(0.f,2030.f,0.f);
+    float cloudRadius = 5000.f;
+    glm::vec3 cloudCenter = vec3(0.f,1080.f,0.f);
     Model model;
     glm::mat4 model_mat;
 
