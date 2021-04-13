@@ -10,6 +10,7 @@ in vec4 FragPosLS;
 uniform vec3 lightDir;
 uniform float lightIntensity;
 uniform vec3 lightColor;
+uniform vec3 ambientColor;
 uniform vec3 camPos; 
 
 uniform vec3 planetCenter;
@@ -210,10 +211,10 @@ void main() {
     vec3 normal = normalize(Normal);
 	vec3 viewDir = normalize(camPos - FragPos);
 
-    vec3 objectColor = texture(texture_diffuse, TexCoord).xyz;
+    vec3 objectColor = vec3(1.f);//texture(texture_diffuse, TexCoord).xyz;
 
 	// AMBIENT
-	vec3 ambient = Ka * vec3(1.0f);
+	vec3 ambient = Ka * ambientColor;
 
 	// SPECULAR
 	vec3 specular = vec3(0.f);
@@ -235,9 +236,10 @@ void main() {
     vec3 E = vec3(lightIntensity) * lightColor * dot(normal, lightDir);
     Fs += E * (Ks*specular + diffuse);
 
-    float shadow = shadowCalculation(FragPosLS);
+    //float shadow = shadowCalculation(FragPosLS);
         
-    vec3 result = (ambient + (shadow*Fs));
+    //vec3 result = (ambient + (shadow*Fs));
+    vec3 result = (ambientColor + (Fs));
 
     FragColor = vec4(result, 1.0);
 } 

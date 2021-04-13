@@ -39,48 +39,100 @@ Texture::Texture(const char* _path, const string& directory, string _type, dimen
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
+    unsigned int type = GL_UNSIGNED_BYTE;
     int width, height, depth, nrComponents;
-    unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-    if (data)
+    auto hdr = stbi_is_hdr(filename.c_str());
+
+    if (hdr) 
     {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
+        float* data = stbi_loadf(filename.c_str(), &width, &height, &nrComponents, 0);
+        type = GL_FLOAT;
+        if (data)
+        {
+            GLenum format;
+            if (nrComponents == 1)
+                format = GL_RED;
+            else if (nrComponents == 3)
+                format = GL_RGB;
+            else if (nrComponents == 4)
+                format = GL_RGBA;
 
-        if (dim == D3D) {
-            height = width;
-            depth = width;
-            glBindTexture(GL_TEXTURE_3D, textureID);
-            glTexImage3D(GL_TEXTURE_3D, 0, format, width, height, depth, 0, format, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_3D);
+            if (dim == D3D) {
+                height = width;
+                depth = width;
+                glBindTexture(GL_TEXTURE_3D, textureID);
+                glTexImage3D(GL_TEXTURE_3D, 0, format, width, height, depth, 0, format, type, data);
+                glGenerateMipmap(GL_TEXTURE_3D);
 
-            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
+            else if (dim == D2D) {
+                glBindTexture(GL_TEXTURE_2D, textureID);
+                glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, type, data);
+                glGenerateMipmap(GL_TEXTURE_2D);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
+
+            stbi_image_free(data);
         }
-        else if (dim == D2D) {
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        else
+        {
+            std::cout << "Texture failed to load at path: " << path << std::endl;
+            stbi_image_free(data);
         }
-
-        stbi_image_free(data);
     }
-    else
+    else 
     {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
+        unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+        if (data)
+        {
+            GLenum format;
+            if (nrComponents == 1)
+                format = GL_RED;
+            else if (nrComponents == 3)
+                format = GL_RGB;
+            else if (nrComponents == 4)
+                format = GL_RGBA;
+
+            if (dim == D3D) {
+                height = width;
+                depth = width;
+                glBindTexture(GL_TEXTURE_3D, textureID);
+                glTexImage3D(GL_TEXTURE_3D, 0, format, width, height, depth, 0, format, type, data);
+                glGenerateMipmap(GL_TEXTURE_3D);
+
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
+            else if (dim == D2D) {
+                glBindTexture(GL_TEXTURE_2D, textureID);
+                glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, type, data);
+                glGenerateMipmap(GL_TEXTURE_2D);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
+
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Texture failed to load at path: " << path << std::endl;
+            stbi_image_free(data);
+        }
     }
 
     id = textureID;

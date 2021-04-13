@@ -4,7 +4,9 @@ RenderContext::RenderContext(Camera* _camera, int _SCR_WIDTH, int _SCR_HEIGHT) :
     depthShader("../shaders/depth_vs.glsl", "../shaders/depth_fs.glsl"),
     gaussFilter("../shaders/gauss_filter_vs.glsl", "../shaders/gauss_filter_fs.glsl"),
     hdrShader("../shaders/screen_vs.glsl", "../shaders/screen_fs.glsl"),
-    luminanceShader("../shaders/luminance_vs.glsl", "../shaders/luminance_fs.glsl")
+    luminanceShader("../shaders/luminance_vs.glsl", "../shaders/luminance_fs.glsl"),
+    starShader("../shaders/star_vs.glsl", "../shaders/star_fs.glsl"),
+    sunShader("../shaders/sun_vs.glsl", "../shaders/sun_fs.glsl")
 {
     SCR_WIDTH = _SCR_WIDTH;
     SCR_HEIGHT = _SCR_HEIGHT;
@@ -19,7 +21,30 @@ float lerp(float v0, float v1, float t) {
     return (1 - t) * v0 + t * v1;
 }
 
-void RenderContext::Draw(vector<PBRobj*> objects, Light light, Camera camera) {
+void RenderContext::DrawSky(Light light) {
+
+    // You can do better than this...
+
+    celestial_objs[0]->translate(camera->Position + light.getDir() * 10000.f);
+    celestial_objs[1]->translate(camera->Position);
+
+    for (auto obj : celestial_objs) {
+        obj->updateTRS();
+    }
+
+    //for (int i = 0; i < 3; i++) {
+    //    applyFilter(gaussFilter, light.fbo, fbo_sdwmap_tmptarget);
+    //}
+
+    fbo_celestial->bind();
+    for (auto obj : celestial_objs) {
+        obj->shader.use();
+        sendPBRUniforms(obj, light, obj->shader);
+        obj->model.Draw(obj->shader);
+    }
+}
+
+void RenderContext::Draw(vector<PBRobj*> objects, Light light) {
     
     for (auto obj : objects) {
         obj->updateTRS();
@@ -28,7 +53,7 @@ void RenderContext::Draw(vector<PBRobj*> objects, Light light, Camera camera) {
     fbo_depth->bind();
     for (auto obj : objects) {
         depthShader.use();
-        sendDepthUniforms(obj, camera);
+        sendDepthUniforms(obj);
         obj->model.Draw(depthShader);
     }
     
@@ -41,13 +66,15 @@ void RenderContext::Draw(vector<PBRobj*> objects, Light light, Camera camera) {
     fbo->bind();
     for (auto obj : objects) {
         obj->shader.use();
-        sendPBRUniforms(obj, light, camera, obj->shader);
+        sendPBRUniforms(obj, light, obj->shader);
         obj->model.Draw(obj->shader);
     }
     
+    DrawSky(light);
+
     if (clouds != nullptr) {
-        clouds->time = 0;
-        clouds->Draw(light, camera);
+        //clouds->time = 0;
+        clouds->Draw(light);
 
         meanLuminance(clouds->fb->color_attachments[0]->id);
         applyToneMapping(fbo, Main, clouds->fb->color_attachments[0]->id);
@@ -58,15 +85,22 @@ void RenderContext::setScreenSize(int _SCR_WIDTH, int _SCR_HEIGHT) {
     SCR_HEIGHT = _SCR_HEIGHT;
 }
 void RenderContext::enableAtmosphere() {
+
+    celestialSphere->setShader(starShader);
+    sun->setShader(sunShader);
+
+    celestial_objs.push_back(sun);
+    celestial_objs.push_back(celestialSphere);
+
     clouds = new Clouds(this);;
 }
 
-void RenderContext::sendDepthUniforms(PBRobj* obj, Camera camera) {
+void RenderContext::sendDepthUniforms(PBRobj* obj) {
     depthShader.setMat4("model", obj->model_mat);
-    depthShader.setMat4("projection", camera.GetProjMatrix(SCR_WIDTH, SCR_HEIGHT));
-    depthShader.setMat4("view", camera.GetViewMatrix());
+    depthShader.setMat4("projection", camera->GetProjMatrix(SCR_WIDTH, SCR_HEIGHT));
+    depthShader.setMat4("view", camera->GetViewMatrix());
 }
-void RenderContext::sendPBRUniforms(PBRobj* obj, Light light, Camera camera, Shader shader) {
+void RenderContext::sendPBRUniforms(PBRobj* obj, Light light, Shader shader) {
 
     auto textures = obj->model.textures_loaded;
     auto texture_diffuse = -1;
@@ -94,19 +128,20 @@ void RenderContext::sendPBRUniforms(PBRobj* obj, Light light, Camera camera, Sha
     glBindTexture(GL_TEXTURE_2D, blueNoise->id);
 
     shader.setMat4("model", obj->model_mat);
-    shader.setMat4("projection", camera.GetProjMatrix(SCR_WIDTH, SCR_HEIGHT));
-    shader.setMat4("view", camera.GetViewMatrix());
+    shader.setMat4("projection", camera->GetProjMatrix(SCR_WIDTH, SCR_HEIGHT));
+    shader.setMat4("view", camera->GetViewMatrix());
 
-    shader.setVec3("camPos", camera.Position);
-    shader.setVec3("camDir", camera.Front);
-    shader.setVec3("camUp", camera.Up);
-    shader.setVec3("camRight", camera.Right);
+    shader.setVec3("camPos", camera->Position);
+    shader.setVec3("camDir", camera->Front);
+    shader.setVec3("camUp", camera->Up);
+    shader.setVec3("camRight", camera->Right);
 
     shader.setVec2("iResolution", vec2(SCR_WIDTH, SCR_HEIGHT));
 
     shader.setMat4("LSM", light.getLSMatrix());
     shader.setVec3("lightDir", light.getDir());
     shader.setVec3("lightColor", light.color);
+    shader.setVec3("ambientColor", light.ambientColor);
 
     shader.setFloat("lightIntensity", light.intensity);
     //shader.setVec3("ambientColor", ambientColor);
@@ -133,7 +168,7 @@ void RenderContext::sendPBRUniforms(PBRobj* obj, Light light, Camera camera, Sha
 void RenderContext::initFBOs() {
 
     fbo = new FrameBuffer(SCR_WIDTH, SCR_HEIGHT);
-    fbo->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA32F, GL_RGBA, GL_FLOAT);
+    fbo->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA16F, GL_RGBA, GL_FLOAT);
     fbo->attachDepthBuffer(GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT);
 
     fbo_depth = new FrameBuffer(SCR_WIDTH, SCR_HEIGHT);
@@ -143,13 +178,17 @@ void RenderContext::initFBOs() {
     fbo_sdwmap_tmptarget->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RG32F, GL_RG, GL_FLOAT);
     
     fbo_hdr_tmptarget = new FrameBuffer(SCR_WIDTH, SCR_HEIGHT);
-    fbo_hdr_tmptarget->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA32F, GL_RGBA, GL_FLOAT);
+    fbo_hdr_tmptarget->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA16F, GL_RGBA, GL_FLOAT);
 
     fbo_luminance_1 = new FrameBuffer(SCR_WIDTH, SCR_HEIGHT);
     fbo_luminance_2 = new FrameBuffer(SCR_WIDTH, SCR_HEIGHT);
 
     fbo_luminance_1->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA16F, GL_RGBA, GL_FLOAT);
     fbo_luminance_2->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA16F, GL_RGBA, GL_FLOAT);
+
+    fbo_celestial = new FrameBuffer(SCR_WIDTH, SCR_HEIGHT);
+    fbo_celestial->attachColorBuffer(GL_COLOR_ATTACHMENT0, GL_RGBA16F, GL_RGBA, GL_FLOAT);
+    fbo_celestial->attachDepthBuffer(GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT);
 
 }
 void RenderContext::applyFilter(Shader filter, FrameBuffer* src, FrameBuffer* dst) {

@@ -18,6 +18,7 @@ public:
 	vec3 position;
 	vec3 direction;// = vec3(0, 1, 0);
 	vec3 color;
+	vec3 ambientColor;
 	float intensity;
 	light_type type;
 	bool shadows;

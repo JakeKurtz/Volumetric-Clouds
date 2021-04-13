@@ -81,7 +81,7 @@ vec2 sphereIntersect(vec3 center, float radius, vec3 rayOrigin, vec3 rayDir) {
     return vec2(distToSphere, distInSphere);
 }
 float atmoDensity(vec3 pos, float scaleHeight) {
-	float h = length(pos) - planetRadius;
+    float h = remap(pos.y, planetRadius, atmosphereRadius, 0.f, 1.f);
 	return exp(-(h / scaleHeight));
 }
 void atmoRayLight(vec3 rayOrigin, vec3 rayDir, float rayLength, out float lightOpticalDepth_ray, out float lightOpticalDepth_mie) {

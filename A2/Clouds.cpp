@@ -16,46 +16,56 @@ Clouds::Clouds(RenderContext* _renderContext) :
     model_mat = glm::translate(mat4(), cloudCenter);
     model_mat = glm::scale(model_mat, vec3(6250 + 6000 + 20));
 }
-void Clouds::Draw(Light _light, Camera camera) {
+void Clouds::Draw(Light _light) {
 
     fb->bind();
 
     shader.use();
-    sendUniforms(_light, camera);
+    sendUniforms(_light);
     model.Draw(shader);
 
 }
-void Clouds::SetRenderContext(RenderContext* _renderContext) {
+void Clouds::SetRenderContext(RenderContext *_renderContext) {
     renderContext = _renderContext;
 }
-void Clouds::sendUniforms(Light light, Camera camera) {
+void Clouds::sendUniforms(Light light) {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, noiseTex->id);
+    shader.setInt("noisetex", 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_3D, detailNoiseTex->id);
+    shader.setInt("detailNoiseTex", 1);
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, coverageTex->id);
+    shader.setInt("coverageTex", 2);
 
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, blueNoise->id);
+    shader.setInt("blueNoise", 3);
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, renderContext->fbo->color_attachments[0]->id);
+    shader.setInt("groundTex", 4);
 
     glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, renderContext->fbo_celestial->color_attachments[0]->id);
+    shader.setInt("celestialTex", 5);
+
+    glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, renderContext->fbo_depth->depth_attachment->id);
+    shader.setInt("cameraDepthTexture", 6);
 
     shader.setMat4("model", model_mat);
-    shader.setMat4("projection", camera.GetProjMatrix(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
-    shader.setMat4("view", camera.GetViewMatrix());
+    shader.setMat4("projection", renderContext->camera->GetProjMatrix(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
+    shader.setMat4("view", renderContext->camera->GetViewMatrix());
 
-    shader.setVec3("camPos", camera.Position);
-    shader.setVec3("camDir", camera.Front);
-    shader.setVec3("camUp", camera.Up);
-    shader.setVec3("camRight", camera.Right);
+    shader.setVec3("camPos", renderContext->camera->Position);
+    shader.setVec3("camDir", renderContext->camera->Front);
+    shader.setVec3("camUp", renderContext->camera->Up);
+    shader.setVec3("camRight", renderContext->camera->Right);
 
     shader.setVec2("iResolution", vec2(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
 
@@ -107,15 +117,8 @@ void Clouds::sendUniforms(Light light, Camera camera) {
     shader.setVec3("cloudCenter", cloudCenter);
 
     shader.setFloat("time", time);
-
-    shader.setInt("noisetex", 0);
-    shader.setInt("detailNoiseTex", 1);
-    shader.setInt("coverageTex", 2);
-    shader.setInt("blueNoise", 3);
-    shader.setInt("screenTexture", 4);
-    shader.setInt("cameraDepthTexture", 5);
 }
-void Clouds::sendDepthUniforms(Light light, Camera camera) {
+void Clouds::sendDepthUniforms(Light light) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, noiseTex->id);
 
@@ -132,13 +135,13 @@ void Clouds::sendDepthUniforms(Light light, Camera camera) {
     glBindTexture(GL_TEXTURE_2D, renderContext->fbo_depth->depth_attachment->id);
 
     shader.setMat4("model", model_mat);
-    shader.setMat4("projection", camera.GetProjMatrix(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
-    shader.setMat4("view", camera.GetViewMatrix());
+    shader.setMat4("projection", renderContext->camera->GetProjMatrix(renderContext->SCR_WIDTH, renderContext->SCR_HEIGHT));
+    shader.setMat4("view", renderContext->camera->GetViewMatrix());
 
-    shader.setVec3("camPos", camera.Position);
-    shader.setVec3("camDir", camera.Front);
-    shader.setVec3("camUp", camera.Up);
-    shader.setVec3("camRight", camera.Right);
+    shader.setVec3("camPos", renderContext->camera->Position);
+    shader.setVec3("camDir", renderContext->camera->Front);
+    shader.setVec3("camUp", renderContext->camera->Up);
+    shader.setVec3("camRight", renderContext->camera->Right);
 
     //shader.setFloat("time", i);
 

@@ -15,7 +15,7 @@ class RenderContext;
 class Clouds 
 {
 public:
-    float density = 0.1;
+    float density = 1.f;
     float topDensity = 0.9;
     float bottomDensity = 0.0;
 
@@ -27,7 +27,7 @@ public:
     float noiseScale = 0.010;
     float detailScale = 0.035;
 
-    float thickness = 30.f;
+    float thickness = 10.f;
     float cloudTopRoundness = 0.f;
     float cloudBottomRoundness = 0.f;
 
@@ -66,9 +66,9 @@ public:
     unsigned int frameTex;
     unsigned int depthTex;
 
-    Clouds(RenderContext* _renderContext);
-    void Draw(Light _light, Camera camera);
-    void SetRenderContext(RenderContext* _renderContext);
+    Clouds(RenderContext *_renderContext);
+    void Draw(Light _light);
+    void SetRenderContext(RenderContext *_renderContext);
 
 private:
 
@@ -82,8 +82,8 @@ private:
     unsigned int frameBuffer;
     unsigned int depthBuffer;
 
-    void sendUniforms(Light light, Camera camera);
-    void sendDepthUniforms(Light light, Camera camera);
+    void sendUniforms(Light light);
+    void sendDepthUniforms(Light light);
     void setColorFBO();
     void setDepthFBO();
     void setDepthTex();

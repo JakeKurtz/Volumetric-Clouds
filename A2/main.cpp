@@ -198,16 +198,16 @@ int main()
     PBRobj sphere1("../models/sphere.obj", glm::vec3(0.f,6005.f,-10.f), 1.f);
     PBRobj sphere2("../models/sphere.obj", glm::vec3(3.f,6010.f,0.f), 1.f);
     PBRobj sphere3("../models/sphere.obj", glm::vec3(-3.f,6015.f,0.f), 1.f);
-    PBRobj sun("../models/sphere.obj", glm::vec3(0.f,6000.f,0.f), 100.f);
-    PBRobj celestialSphere("../models/celestial/celestial.obj", glm::vec3(0.f), 12000.f);
+    //PBRobj sun("../models/sphere.obj", glm::vec3(0.f,6000.f,0.f), 250.f);
+    //PBRobj celestialSphere("../models/celestial/celestial.obj", glm::vec3(0.f), 12000.f);
     PBRobj plane("../models/plane.obj", glm::vec3(0.f,6000.f,0.f), 100.f);
-    PBRobj mountain("../models/mountain2/mountain2.obj", glm::vec3(0.f,6010.f,-100.f), 5.f);
+    PBRobj mountain("../models/mountain/mountain.obj", glm::vec3(0.f,6000.f,-100.f), 1.f);
 
-    Shader starShader("../shaders/star_vs.glsl", "../shaders/star_fs.glsl");
-    Shader sunShader("../shaders/sun_vs.glsl", "../shaders/sun_fs.glsl");
+    //Shader starShader("../shaders/star_vs.glsl", "../shaders/star_fs.glsl");
+    //Shader sunShader("../shaders/sun_vs.glsl", "../shaders/sun_fs.glsl");
 
-    celestialSphere.setShader(starShader);
-    sun.setShader(sunShader);
+    //celestialSphere.setShader(starShader);
+    //sun.setShader(sunShader);
 
     RenderContext* render_context = new RenderContext(&camera, 1920, 1080);
     render_context->enableAtmosphere();
@@ -216,8 +216,8 @@ int main()
     //objects.push_back(&sphere2);
     //objects.push_back(&sphere3);
     //objects.push_back(&plane);
-    objects.push_back(&sun);
-    objects.push_back(&celestialSphere);
+    //objects.push_back(&sun);
+    //objects.push_back(&celestialSphere);
     objects.push_back(&mountain);
 
     // Infinite render loop
@@ -239,13 +239,10 @@ int main()
 
         //glEnable(GL_FRAMEBUFFER_SRGB);
 
-        sun.translate(camera.Position+light.getDir() * 10000.f);
-
-        celestialSphere.translate(camera.Position);
-
         //clouds->time = i;
 
-        render_context->Draw(objects, light, camera);
+        render_context->Draw(objects, light);
+        render_context->clouds->time = i*5.f;
         //glDisable(GL_FRAMEBUFFER_SRGB);
 
         //clouds->Draw(light, camera);
@@ -419,8 +416,13 @@ int main()
             ImGui::Text("Sun Color");
             ImGui::ColorEdit3("##color", (float*)&light.color);
 
+
+            static glm::vec3 ambientColor = glm::vec3(0.f);
             ImGui::Text("Ambient Color");
-            ImGui::ColorEdit3("##acolor", (float*)&render_context->clouds->ambientColor);
+            ImGui::ColorEdit3("##acolor", (float*)&ambientColor);
+
+            render_context->clouds->ambientColor = ambientColor;
+            light.ambientColor = ambientColor;
 
             ImGui::Text("Sun Intensity");
             ImGui::SliderFloat("##intensity", &light.intensity, 1.f, 100.0f, "%.4f");
