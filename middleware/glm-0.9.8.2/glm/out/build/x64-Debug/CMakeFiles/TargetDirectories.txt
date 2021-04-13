@@ -1,3 +1,0 @@
-C:/Users/alien/OneDrive/Desktop/FINAL_PROJECT/A2/middleware/glm-0.9.8.2/glm/out/build/x64-Debug/CMakeFiles/glm_dummy.dir
-C:/Users/alien/OneDrive/Desktop/FINAL_PROJECT/A2/middleware/glm-0.9.8.2/glm/out/build/x64-Debug/CMakeFiles/edit_cache.dir
-C:/Users/alien/OneDrive/Desktop/FINAL_PROJECT/A2/middleware/glm-0.9.8.2/glm/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
