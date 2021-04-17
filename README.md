@@ -1,15 +1,15 @@
 # Results
 
 <p align="center">
-  <img src="https://i.imgur.com/iSHEMCy.png">
+  <img width="800" src="https://i.imgur.com/iSHEMCy.png">
 </p>
 
 <p align="center">
-  <img src="https://i.imgur.com/Lyepcpo.png">
+  <img width="800" src="https://i.imgur.com/Lyepcpo.png">
 </p>
 
 <p align="center">
-  <img src="https://i.imgur.com/5kVaKRI.png">
+  <img width="800" src="https://i.imgur.com/5kVaKRI.png">
 </p>
 
 # References
