@@ -1,16 +1,6 @@
 # Results
 
-<p align="center">
-  <img width="800" src="https://i.imgur.com/iSHEMCy.png">
-</p>
-
-<p align="center">
-  <img width="800" src="https://i.imgur.com/Lyepcpo.png">
-</p>
-
-<p align="center">
-  <img width="800" src="https://i.imgur.com/5kVaKRI.png">
-</p>
+![Alt Text](https://media.giphy.com/media/d4q4nX84yYVNxoYOyr/giphy.gif)
 
 # References
 ### https://www.diva-portal.org/smash/get/diva2:1223894/FULLTEXT01.pdf
