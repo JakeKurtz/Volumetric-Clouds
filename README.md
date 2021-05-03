@@ -1,10 +1,12 @@
 # Results
-
 ![alt text](https://github.com//JakeKurtz/Volumetric-Clouds/blob/master/results/earth_1.png?raw=true)
 ![alt text](https://github.com//JakeKurtz/Volumetric-Clouds/blob/master/results/earth_2.png?raw=true)
 ![alt text](https://github.com//JakeKurtz/Volumetric-Clouds/blob/master/results/ground_1.png?raw=true)
 ![alt text](https://github.com//JakeKurtz/Volumetric-Clouds/blob/master/results/ground_2.PNG?raw=true)
 ![alt text](https://github.com//JakeKurtz/Volumetric-Clouds/blob/master/results/ground_3.PNG?raw=true)
+
+# University of Calgary Computer Science Showcase 2021
+### https://science.ucalgary.ca/computer-science/about/outreach/computer-science-showcase-2021
 
 # References
 ### https://learnopengl.com/
