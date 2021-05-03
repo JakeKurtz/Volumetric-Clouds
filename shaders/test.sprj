@@ -1,0 +1,322 @@
+<?xml version="1.0"?>
+<project version="2">
+	<pipeline>
+		<pass name="test" type="shader" active="true" patchverts="1">
+			<shader type="vs" path="shaders\test_testVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\test_testPS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="Box" type="geometry">
+					<type>Cube</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<scaleX>10</scaleX>
+					<scaleY>10</scaleY>
+					<scaleZ>10</scaleZ>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float4x4" name="model" system="GeometryTransform" />
+				<variable type="float4x4" name="projection" system="Projection" />
+				<variable type="float" name="mie_intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float4x4" name="view" system="View" />
+				<variable type="float" name="ray_intensity">
+					<row>
+						<value>25</value>
+					</row>
+				</variable>
+				<variable type="float" name="absorption_intensity">
+					<row>
+						<value>3</value>
+					</row>
+				</variable>
+				<variable type="float3" name="cloudCenter">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="planetCenter">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="atmosphereRadius">
+					<row>
+						<value>10</value>
+					</row>
+				</variable>
+				<variable type="float" name="planetRadius">
+					<row>
+						<value>5</value>
+					</row>
+				</variable>
+				<variable type="float" name="cloudRadius">
+					<row>
+						<value>5</value>
+					</row>
+				</variable>
+				<variable type="float" name="thickness">
+					<row>
+						<value>35</value>
+					</row>
+				</variable>
+				<variable type="float" name="scaleHeight_rayleigh">
+					<row>
+						<value>0.0799999982</value>
+					</row>
+				</variable>
+				<variable type="float" name="scaleHeight_mie">
+					<row>
+						<value>0.25</value>
+					</row>
+				</variable>
+				<variable type="float3" name="lightDir">
+					<row>
+						<value>0</value>
+						<value>1</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="lightIntensity">
+					<row>
+						<value>31</value>
+					</row>
+				</variable>
+				<variable type="float3" name="lightColor">
+					<row>
+						<value>1</value>
+						<value>1</value>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float" name="cloudBottomRoundness">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="cloudTopRoundness">
+					<row>
+						<value>0.172399998</value>
+					</row>
+				</variable>
+				<variable type="float" name="bottomDensity">
+					<row>
+						<value>0.155200005</value>
+					</row>
+				</variable>
+				<variable type="float" name="topDensity">
+					<row>
+						<value>0.899999976</value>
+					</row>
+				</variable>
+				<variable type="float" name="coverageScale">
+					<row>
+						<value>0.000600000028</value>
+					</row>
+				</variable>
+				<variable type="float" name="time" system="Time" />
+				<variable type="float" name="noiseScale">
+					<row>
+						<value>0.00999999978</value>
+					</row>
+				</variable>
+				<variable type="float" name="detailScale">
+					<row>
+						<value>0.0700000003</value>
+					</row>
+				</variable>
+				<variable type="float" name="coverageIntensity">
+					<row>
+						<value>4</value>
+					</row>
+				</variable>
+				<variable type="float" name="noiseIntensity">
+					<row>
+						<value>0.779999971</value>
+					</row>
+				</variable>
+				<variable type="float" name="detailIntensity">
+					<row>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float" name="density">
+					<row>
+						<value>3</value>
+					</row>
+				</variable>
+				<variable type="float" name="g">
+					<row>
+						<value>-0.0199999996</value>
+					</row>
+				</variable>
+				<variable type="float" name="silver_spread">
+					<row>
+						<value>1.63</value>
+					</row>
+				</variable>
+				<variable type="float" name="silver_intensity">
+					<row>
+						<value>1.63</value>
+					</row>
+				</variable>
+				<variable type="float3" name="ambientColor">
+					<row>
+						<value>0.0392149985</value>
+						<value>0.0352940001</value>
+						<value>0.0549019016</value>
+					</row>
+				</variable>
+				<variable type="float2" name="iResolution" system="ViewportSize" />
+				<variable type="float3" name="camRight">
+					<row>
+						<value>0.5</value>
+						<value>0.349413991</value>
+						<value>-0.0887546539</value>
+					</row>
+				</variable>
+				<variable type="float3" name="camUp">
+					<row>
+						<value>2.40867472</value>
+						<value>1.8778863</value>
+						<value>-2.58298826</value>
+					</row>
+				</variable>
+				<variable type="float3" name="camDir" system="CameraDirection3" />
+				<variable type="float3" name="camPos" system="CameraPosition3" />
+				<variable type="float" name="exposure">
+					<row>
+						<value>2</value>
+					</row>
+				</variable>
+				<variable type="float" name="ap_world_intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="ap_cloud_intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="skyTopColor">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="skyBottomColor">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="scale_height">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="scatteringIntensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="ambientBlend">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="attinuationScalar">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="attinuationClamp">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="max_steps">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+			</variables>
+			<macros />
+		</pass>
+	</pipeline>
+	<objects />
+	<cameras />
+	<settings>
+		<entry type="property" name="Box" item="pipe" />
+		<entry type="file" name="test" shader="vs" />
+		<entry type="file" name="test" shader="ps" />
+		<entry type="pinned" name="absorption_intensity" owner="test" />
+		<entry type="pinned" name="cloudCenter" owner="test" />
+		<entry type="pinned" name="planetCenter" owner="test" />
+		<entry type="pinned" name="atmosphereRadius" owner="test" />
+		<entry type="pinned" name="planetRadius" owner="test" />
+		<entry type="pinned" name="cloudRadius" owner="test" />
+		<entry type="pinned" name="thickness" owner="test" />
+		<entry type="pinned" name="scaleHeight_rayleigh" owner="test" />
+		<entry type="pinned" name="scaleHeight_mie" owner="test" />
+		<entry type="pinned" name="lightDir" owner="test" />
+		<entry type="pinned" name="lightIntensity" owner="test" />
+		<entry type="pinned" name="lightColor" owner="test" />
+		<entry type="pinned" name="cloudBottomRoundness" owner="test" />
+		<entry type="pinned" name="cloudTopRoundness" owner="test" />
+		<entry type="pinned" name="bottomDensity" owner="test" />
+		<entry type="pinned" name="topDensity" owner="test" />
+		<entry type="pinned" name="coverageScale" owner="test" />
+		<entry type="pinned" name="noiseScale" owner="test" />
+		<entry type="pinned" name="detailScale" owner="test" />
+		<entry type="pinned" name="coverageIntensity" owner="test" />
+		<entry type="pinned" name="noiseIntensity" owner="test" />
+		<entry type="pinned" name="detailIntensity" owner="test" />
+		<entry type="pinned" name="density" owner="test" />
+		<entry type="pinned" name="g" owner="test" />
+		<entry type="pinned" name="silver_spread" owner="test" />
+		<entry type="pinned" name="silver_intensity" owner="test" />
+		<entry type="pinned" name="ambientColor" owner="test" />
+		<entry type="pinned" name="exposure" owner="test" />
+		<entry type="pinned" name="mie_intensity" owner="test" />
+		<entry type="pinned" name="ray_intensity" owner="test" />
+		<entry type="pinned" name="ap_world_intensity" owner="test" />
+		<entry type="pinned" name="ap_cloud_intensity" owner="test" />
+		<entry type="pinned" name="skyTopColor" owner="test" />
+		<entry type="pinned" name="skyBottomColor" owner="test" />
+		<entry type="pinned" name="scale_height" owner="test" />
+		<entry type="pinned" name="scatteringIntensity" owner="test" />
+		<entry type="pinned" name="ambientBlend" owner="test" />
+		<entry type="pinned" name="attinuationScalar" owner="test" />
+		<entry type="pinned" name="attinuationClamp" owner="test" />
+		<entry type="pinned" name="max_steps" owner="test" />
+		<entry type="camera" fp="false">
+			<distance>29</distance>
+			<pitch>28</pitch>
+			<yaw>317</yaw>
+			<roll>360</roll>
+		</entry>
+		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
+		<entry type="usealpha" val="false" />
+	</settings>
+	<plugindata />
+</project>
