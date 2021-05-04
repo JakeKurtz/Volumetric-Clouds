@@ -1,3 +1,9 @@
+# About
+
+This was my final project for CPSC 591 - Rendering. 
+
+Many games with large open worlds have dynamic weather and lighting systems to give players a greater sense of immersion. A big part of creating convincing and beautiful worlds is creating convincing and beautiful clouds. In this project, I developed a shader which procedurally generates volumetric clouds using noise functions and ray marching techniques.
+
 # Results
 ![alt text](https://github.com//JakeKurtz/Volumetric-Clouds/blob/master/results/earth_1.png?raw=true)
 ![alt text](https://github.com//JakeKurtz/Volumetric-Clouds/blob/master/results/earth_2.png?raw=true)
